@@ -1,2 +1,2 @@
-# pf9_appctl
-pf9_appctl for app.run
+# pf9-appctl
+pf9-appctl for app.run
