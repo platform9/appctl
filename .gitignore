@@ -1,0 +1,9 @@
+# Binaries for programs, plugins, bin.
+bin
+build
+.vscode
+.env
+pf9-appctl
+
+# Test binary
+*.test
