@@ -3,10 +3,11 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/platform9/pf9-appctl/pkg/appManageAPI"
 	"github.com/spf13/cobra"
 )
 
-// appCmd represents the app commands can be run
+// appCmd represents the app commands can be run.
 var (
 	appCmd = &cobra.Command{
 		Use:   "app",
@@ -22,12 +23,21 @@ var (
 	}
 )
 
+// Flags declaration
+var (
+	nameSpace string
+)
+
 func init() {
 	rootCmd.AddCommand(appCmd)
 	appCmd.AddCommand(appCmdList)
-	//appCmdList.Flags().StringVarP(&nameSpace, "namespace", "n", "", "set namespace")
+	appCmdList.Flags().StringVarP(&nameSpace, "namespace", "n", "", "set namespace")
 }
 
+// To list apps running in given namespace.
 func appCmdListRun(cmd *cobra.Command, args []string) {
-	fmt.Printf("Into the applist command, logic to be implemeted")
+	err := appManageAPI.ListAppsInfo(nameSpace)
+	if err != nil {
+		fmt.Printf("Not able to list apps from namespace %v: Error %v", nameSpace, err)
+	}
 }
