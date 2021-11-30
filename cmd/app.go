@@ -30,6 +30,12 @@ var (
 		Long:  `Create an app`,
 		Run:   appCmdCreateRun,
 	}
+	appCmdGetAppByName = &cobra.Command{
+		Use:   "get",
+		Short: "Get an app info",
+		Long:  `Get an app info`,
+		Run:   appCmdGetAppByNameRun,
+	}
 )
 
 var AppName string
@@ -38,8 +44,11 @@ func init() {
 	rootCmd.AddCommand(appCmd)
 	appCmd.AddCommand(appCmdList)
 	appCmd.AddCommand(appCmdCreate)
+	appCmd.AddCommand(appCmdGetAppByName)
 	appCmdCreate.Flags().StringVarP(&CreateApp.Name, "app_name", "a", "", "set app name to create")
 	appCmdCreate.Flags().StringVarP(&CreateApp.Image, "image", "i", "", "set app source image to create")
+	appCmdGetAppByName.Flags().StringVarP(&AppName, "app_name", "a", "", "set app name to get info")
+
 }
 
 type App struct {
@@ -54,18 +63,18 @@ func appCmdListRun(cmd *cobra.Command, args []string) {
 	// Call function to get user namespace from login info.
 	nameSpace, err := appManageAPI.GetNameSpace()
 	if err != nil {
-		fmt.Printf("Not able to get namespace. Error %v", err)
+		fmt.Printf("Not able to get namespace. Error %v\n", err)
 	}
 	errapi := appManageAPI.ListAppsInfo(nameSpace)
 	if errapi != nil {
-		fmt.Printf("Not able to list apps from namespace %v: Error %v", nameSpace, err)
+		fmt.Printf("Not able to list apps from namespace %v: Error %v\n", nameSpace, err)
 	}
 }
 
 func appCmdCreateRun(cmd *cobra.Command, args []string) {
 	nameSpace, err := appManageAPI.GetNameSpace()
 	if err != nil {
-		fmt.Printf("Not able to get namespace. Error %v", err)
+		fmt.Printf("Not able to get namespace. Error %v\n", err)
 	}
 	reader := bufio.NewReader(os.Stdin)
 	for true {
@@ -80,13 +89,13 @@ func appCmdCreateRun(cmd *cobra.Command, args []string) {
 			CreateApp.Image = strings.TrimSuffix(appSourceImage, "\n")
 		}
 		if CreateApp.Name == "" && CreateApp.Image != "" {
-			fmt.Printf("\nApp Name is found empty, give valid app name\n")
+			fmt.Printf("App Name is found empty, give valid app name\n")
 		}
 		if CreateApp.Name != "" && CreateApp.Image == "" {
-			fmt.Printf("\nSource Image is found empty, give valid image\n")
+			fmt.Printf("Source Image is found empty, give valid image\n")
 		}
 		if CreateApp.Name == "" && CreateApp.Image == "" {
-			fmt.Printf("\nBoth App Name, Source Image are found empty, give valid information\n")
+			fmt.Printf("Both App Name, Source Image are found empty, give valid information\n")
 		}
 		if CreateApp.Name != "" && CreateApp.Image != "" {
 			break
@@ -94,6 +103,19 @@ func appCmdCreateRun(cmd *cobra.Command, args []string) {
 	}
 	errapi := appManageAPI.CreateApp(CreateApp.Name, nameSpace, CreateApp.Image)
 	if errapi != nil {
-		fmt.Printf("Not able to create app of source image %v in namespace %v: Error %v", CreateApp.Image, nameSpace, err)
+		fmt.Printf("Not able to create app of source image %v in namespace %v: Error %v\n", CreateApp.Image, nameSpace, err)
+	}
+}
+
+// To get app information by its name
+func appCmdGetAppByNameRun(cmd *cobra.Command, args []string) {
+	// Call function to get user namespace from login info.
+	nameSpace, err := appManageAPI.GetNameSpace()
+	if err != nil {
+		fmt.Printf("Not able to get namespace. Error %v\n", err)
+	}
+	errapi := appManageAPI.GetAppByNameInfo(AppName, nameSpace)
+	if errapi != nil {
+		fmt.Printf("\nNot able to get app information from namespace %v: Error %v\n", nameSpace, err)
 	}
 }

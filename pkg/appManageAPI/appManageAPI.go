@@ -1,6 +1,7 @@
 package appManageAPI
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/platform9/pf9-appctl/pkg/appAPIs"
@@ -21,7 +22,7 @@ func ListAppsInfo(
 	nameSpace string, // namespace to list apps.
 ) error {
 	if nameSpace == "" {
-		return fmt.Errorf("Namespace not specified.")
+		return fmt.Errorf("Namespace not specified.\n")
 	}
 
 	// To list and store output.
@@ -32,7 +33,7 @@ func ListAppsInfo(
 	// Fetch the running apps in given namespace.
 	list_apps, err := appAPIs.ListApps(nameSpace)
 	if err != nil {
-		return fmt.Errorf("Failed to list apps with error: %v", err)
+		return fmt.Errorf("\nFailed to list apps with error: %v\n", err)
 	}
 
 	// Fetch the App name, namespace deployed in, creationTimestamp
@@ -81,13 +82,13 @@ func CreateApp(
 	image string, // Source Image to create app.
 ) error {
 	if name == "" {
-		return fmt.Errorf("App Name not specified.")
+		return fmt.Errorf("App Name not specified.\n")
 	}
 	if nameSpace == "" {
-		return fmt.Errorf("Namespace not specified.")
+		return fmt.Errorf("Namespace not specified.\n")
 	}
 	if image == "" {
-		return fmt.Errorf("Image not specified.")
+		return fmt.Errorf("Image not specified.\n")
 	}
 	fmt.Printf("Started Creating App\n")
 	fmt.Printf("\nName is %v\nNamespace is %v\nImage is %v\n", name, nameSpace, image)
@@ -95,8 +96,29 @@ func CreateApp(
 
 	err := appAPIs.CreateApp(name, nameSpace, image)
 	if err != nil {
-		return fmt.Errorf("Failed to create app with error: %v", err)
+		return fmt.Errorf("\nFailed to create app with error: %v\n", err)
 	}
 	fmt.Printf("App created with Name: %v. Run 'pf9-appctl app list' to get more information on app\n", name)
+	return nil
+}
+
+// To get a detailed information of particular app by name.
+func GetAppByNameInfo(
+	name string, // app name
+	nameSpace string, // namespace to list apps.
+) error {
+	if name == "" {
+		return fmt.Errorf("App Name not specified.")
+	}
+	if nameSpace == "" {
+		return fmt.Errorf("Namespace not specified.")
+	}
+	// Fetch the detailedapp information for given name from given namespace.
+	get_app, err := appAPIs.GetAppByName(name, nameSpace)
+	if err != nil {
+		return fmt.Errorf("\nFailed to get app information with error: %v\n", err)
+	}
+	jsonformated, err := json.MarshalIndent(get_app, "", "  ")
+	fmt.Printf("%v\n", string(jsonformated))
 	return nil
 }

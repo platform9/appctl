@@ -138,12 +138,10 @@ func GetAppByName(appName string, nameSpace string) (map[string]interface{}, err
 	if err != nil {
 		return nil, err
 	}
-
 	err = json.Unmarshal([]byte(get_app), &getAppInfo)
 	if err != nil {
 		fmt.Printf("The error is %v", err)
 		return nil, fmt.Errorf("Failed to Unmarshal with error: %s", err)
 	}
-	fmt.Printf("Inside method %v\n", getAppInfo)
 	return getAppInfo, nil
 }
