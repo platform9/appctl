@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/platform9/pf9-appctl/pkg/constants"
 )
 
 // Type definition for struct encapsulating app manager APIs.
@@ -41,7 +43,7 @@ func (cli_api *appAPI) ListAppsAPI() ([]byte, error) {
 // To get all the apps information.
 func ListApps(nameSpace string) (map[string]interface{}, error) {
 	// Endpoint to list apps from a given namespace
-	url := fmt.Sprintf("http://127.0.0.1:6112/v1/apps/%s", nameSpace)
+	url := fmt.Sprintf(constants.APPURL+"%s", nameSpace)
 
 	client := &http.Client{}
 
