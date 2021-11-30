@@ -45,7 +45,8 @@ func init() {
 	appCmd.AddCommand(appCmdList)
 	appCmd.AddCommand(appCmdCreate)
 	appCmd.AddCommand(appCmdGetAppByName)
-	appCmdCreate.Flags().StringVarP(&CreateApp.Name, "app_name", "a", "", "set app name to create")
+	appCmdCreate.Flags().StringVarP(&CreateApp.Name, "app_name", "a", "", `set app name to create 
+(lowercase alphanumeric characters, '_' or '.', must start with alphanumeric characters only)`)
 	appCmdCreate.Flags().StringVarP(&CreateApp.Image, "image", "i", "", "set app source image to create")
 	appCmdGetAppByName.Flags().StringVarP(&AppName, "app_name", "a", "", "set app name to get info")
 

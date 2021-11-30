@@ -3,6 +3,7 @@ package appManageAPI
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/platform9/pf9-appctl/pkg/appAPIs"
 	"github.com/platform9/pf9-appctl/pkg/constants"
@@ -98,7 +99,21 @@ func CreateApp(
 	if err != nil {
 		return fmt.Errorf("\nFailed to create app with error: %v\n", err)
 	}
-	fmt.Printf("App created with Name: %v. Run 'pf9-appctl app list' to get more information on app\n", name)
+	//Since creation of App takes some time.
+	time.Sleep(5 * time.Second)
+
+	// Fetch the detailedapp information for given name from given namespace.
+	get_app, err := appAPIs.GetAppByName(name, nameSpace)
+	if err != nil {
+		return fmt.Errorf("\nFailed to get app information with error: %v\n", err)
+	}
+	// URL/ Endpoint where the app service is available.
+	url := (get_app["status"]).(map[string]interface{})["url"]
+	if url != nil {
+		fmt.Printf("App created with Name: %v, and is available at URL: %v\n", name, url)
+	} else {
+		fmt.Printf("App created with Name: %v. Run 'pf9-appctl app list' to get more information on app\n", name)
+	}
 	return nil
 }
 
