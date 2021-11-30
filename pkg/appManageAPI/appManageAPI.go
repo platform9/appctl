@@ -6,7 +6,6 @@ import (
 	"github.com/platform9/pf9-appctl/pkg/appAPIs"
 	"github.com/platform9/pf9-appctl/pkg/constants"
 	"github.com/ryanuber/columnize"
-	//"k8s.io/cli-runtime/pkg/printers"
 )
 
 type ListAppInfo struct {
@@ -73,4 +72,31 @@ func GetNameSpace() (string, error) {
 	*/
 	nameSpace := "default"
 	return nameSpace, nil
+}
+
+// To create an app.
+func CreateApp(
+	name string, // App name to create.
+	nameSpace string, // namespace to list apps.
+	image string, // Source Image to create app.
+) error {
+	if name == "" {
+		return fmt.Errorf("App Name not specified.")
+	}
+	if nameSpace == "" {
+		return fmt.Errorf("Namespace not specified.")
+	}
+	if image == "" {
+		return fmt.Errorf("Image not specified.")
+	}
+	fmt.Printf("Started Creating App\n")
+	fmt.Printf("\nName is %v\nNamespace is %v\nImage is %v\n", name, nameSpace, image)
+	// Fetch the running apps in given namespace.
+
+	err := appAPIs.CreateApp(name, nameSpace, image)
+	if err != nil {
+		return fmt.Errorf("Failed to create app with error: %v", err)
+	}
+	fmt.Printf("App created with Name: %v. Run 'pf9-appctl app list' to get more information on app\n", name)
+	return nil
 }
