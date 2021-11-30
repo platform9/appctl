@@ -43,7 +43,7 @@ func (cli_api *appAPI) ListAppsAPI() ([]byte, error) {
 // To get all the apps information.
 func ListApps(nameSpace string) (map[string]interface{}, error) {
 	// Endpoint to list apps from a given namespace
-	url := fmt.Sprintf(constants.APPURL+"%s", nameSpace)
+	url := fmt.Sprintf(constants.APPURL+"/%s", nameSpace)
 
 	client := &http.Client{}
 
