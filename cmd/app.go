@@ -16,7 +16,7 @@ var (
 	}
 
 	appCmdList = &cobra.Command{
-		Use:   "list",
+		Use:   "info",
 		Short: "List apps running",
 		Long:  `List apps running`,
 		Run:   appCmdListRun,
