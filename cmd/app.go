@@ -32,8 +32,8 @@ var (
 	}
 	appCmdGetAppByName = &cobra.Command{
 		Use:   "get",
-		Short: "Get an app info",
-		Long:  `Get an app info`,
+		Short: "Get a detailed app information (json)",
+		Long:  `Get a detailed app information (json)`,
 		Run:   appCmdGetAppByNameRun,
 	}
 )
