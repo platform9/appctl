@@ -34,7 +34,7 @@ func ListAppsInfo(
 	// Fetch the running apps in given namespace.
 	list_apps, err := appAPIs.ListApps(nameSpace)
 	if err != nil {
-		return fmt.Errorf("\nFailed to list apps with error: %v\n", err)
+		return fmt.Errorf("Failed to list apps with Error: %v\n", err)
 	}
 
 	// Fetch the App name, namespace deployed in, creationTimestamp
@@ -82,6 +82,9 @@ func CreateApp(
 	nameSpace string, // namespace to list apps.
 	image string, // Source Image to create app.
 ) error {
+	if name == "" && image == "" {
+		return fmt.Errorf("App Name and Image not specified.\n")
+	}
 	if name == "" {
 		return fmt.Errorf("App Name not specified.\n")
 	}
@@ -99,6 +102,7 @@ func CreateApp(
 	if err != nil {
 		return fmt.Errorf("\nFailed to create app with error: %v\n", err)
 	}
+
 	//Since creation of App takes some time.
 	time.Sleep(5 * time.Second)
 
@@ -112,7 +116,7 @@ func CreateApp(
 	if url != nil {
 		fmt.Printf("App created with Name: %v, and is available at URL: %v\n", name, url)
 	} else {
-		fmt.Printf("App created with Name: %v. Run 'pf9-appctl app list' to get more information on app\n", name)
+		fmt.Printf("App created with Name: %v. Run 'appctl list' to get more information on app\n", name)
 	}
 	return nil
 }
@@ -131,7 +135,7 @@ func GetAppByNameInfo(
 	// Fetch the detailedapp information for given name from given namespace.
 	get_app, err := appAPIs.GetAppByName(name, nameSpace)
 	if err != nil {
-		return fmt.Errorf("\nFailed to get app information with error: %v\n", err)
+		return fmt.Errorf("Failed to get app information with error: %v\nCheck 'appctl list' for more information on apps running.", err)
 	}
 	jsonformated, err := json.MarshalIndent(get_app, "", "  ")
 	fmt.Printf("%v\n", string(jsonformated))

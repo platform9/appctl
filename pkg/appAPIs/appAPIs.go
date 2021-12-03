@@ -138,9 +138,12 @@ func GetAppByName(appName string, nameSpace string) (map[string]interface{}, err
 	if err != nil {
 		return nil, err
 	}
+	// If incorrect app name is given, then empty response.
+	if len(get_app) == 0 {
+		return nil, fmt.Errorf("App might not exist!!")
+	}
 	err = json.Unmarshal([]byte(get_app), &getAppInfo)
 	if err != nil {
-		fmt.Printf("The error is %v", err)
 		return nil, fmt.Errorf("Failed to Unmarshal with error: %s", err)
 	}
 	return getAppInfo, nil

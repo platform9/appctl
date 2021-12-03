@@ -9,7 +9,7 @@ var verbosity bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:  "pf9-appctl",
+	Use:  "appctl",
 	Long: `CLI tool for Platform9 app run management.`,
 }
 
