@@ -11,8 +11,8 @@ import (
 var (
 	appCmdList = &cobra.Command{
 		Use:   "list",
-		Short: "List apps running",
-		Long:  `List apps running`,
+		Short: "Show all the running apps",
+		Long:  `Show all the running apps`,
 		Run:   appCmdListRun,
 	}
 )

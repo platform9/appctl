@@ -11,8 +11,8 @@ import (
 var (
 	appCmdDescribe = &cobra.Command{
 		Use:   "describe",
-		Short: "Describe detailed information about the app (json)",
-		Long:  `Describe detailed information about the app (json)`,
+		Short: "Provide detailed app information in json format",
+		Long:  `Provide detailed app information in json format`,
 		Run:   appCmdDescribeRun,
 	}
 )
@@ -21,7 +21,7 @@ var AppName string
 
 func init() {
 	rootCmd.AddCommand(appCmdDescribe)
-	appCmdDescribe.Flags().StringVarP(&AppName, "app-name", "n", "", "set app name to describe info")
+	appCmdDescribe.Flags().StringVarP(&AppName, "app-name", "n", "", "Name of app to be described")
 }
 
 // To get app information by its name

@@ -37,7 +37,7 @@ func ListAppsInfo(
 	// Fetch the running apps in given namespace.
 	list_apps, err := appAPIs.ListApps(nameSpace)
 	if err != nil {
-		return fmt.Errorf("Failed to list apps with Error: %v\n", err)
+		return fmt.Errorf("Failed to list apps with error: %v\n", err)
 	}
 
 	// Fetch the App name, namespace deployed in, creationTimestamp
@@ -85,42 +85,48 @@ func CreateApp(
 	nameSpace string, // namespace to list apps.
 	image string, // Source Image to create app.
 ) error {
-	if name == "" && image == "" {
-		return fmt.Errorf("App Name and Image not specified.\n")
-	}
-	if name == "" {
-		return fmt.Errorf("App Name not specified.\n")
+	if name == "" || image == "" {
+		return fmt.Errorf("Either or both of App Name and Image not specified.\n")
 	}
 	if nameSpace == "" {
 		return fmt.Errorf("Namespace not specified.\n")
 	}
-	if image == "" {
-		return fmt.Errorf("Image not specified.\n")
+	// To check if app with same name already exists.
+	appExists, err := appAPIs.GetAppByName(name, nameSpace)
+	if err == nil && appExists != nil {
+		return fmt.Errorf("App with same name already exists!! Please use different name.")
 	}
-	fmt.Printf("Started Creating App\n")
-	fmt.Printf("\nName is %v\nNamespace is %v\nImage is %v\n", name, nameSpace, image)
+
+	fmt.Printf("Deploying app..\n")
 	// Fetch the running apps in given namespace.
 
-	err := appAPIs.CreateApp(name, nameSpace, image)
-	if err != nil {
-		return fmt.Errorf("\nFailed to create app with error: %v\n", err)
+	errcreate := appAPIs.CreateApp(name, nameSpace, image)
+	if errcreate != nil {
+		return fmt.Errorf("Failed to create app with error: %v", errcreate)
 	}
 
-	//Since creation of App takes some time.
-	time.Sleep(5 * time.Second)
+	// Polling to fetch URL if app is deployed.
+	var count = 0
+	for count <= constants.APPDEPLOYINTERVAL {
+		count++
+		// Fetch the detailedapp information for given name from given namespace.
+		get_app, err := appAPIs.GetAppByName(name, nameSpace)
+		if err != nil {
+			return fmt.Errorf("Failed to get app information with error: %v\n", err)
+		}
+		// URL/ Endpoint where the app service is available.
+		url := (get_app["status"]).(map[string]interface{})["url"]
+		if url == nil {
+			//Since creation of App takes some time.
+			time.Sleep(constants.APPDEPLOYINTERVAL * time.Second)
+			continue
+		} else {
+			fmt.Printf("App " + color.Yellow(name) + " is deployed and can be accessed at URL: " + color.Yellow(url) + "\n")
+			return nil
+		}
+	}
+	fmt.Printf("App deploy taking time. Check latest status by running command `appctl list`.\n")
 
-	// Fetch the detailedapp information for given name from given namespace.
-	get_app, err := appAPIs.GetAppByName(name, nameSpace)
-	if err != nil {
-		return fmt.Errorf("\nFailed to get app information with error: %v\n", err)
-	}
-	// URL/ Endpoint where the app service is available.
-	url := (get_app["status"]).(map[string]interface{})["url"]
-	if url != nil {
-		fmt.Printf("App created with Name: %v, and is available at URL: %v\n", name, url)
-	} else {
-		fmt.Printf("App created with Name: %v. Run 'appctl list' to get more information on app\n", name)
-	}
 	return nil
 }
 
@@ -140,8 +146,8 @@ func GetAppByNameInfo(
 	if err != nil {
 		return fmt.Errorf("Failed to get app information with error: %v\nCheck 'appctl list' for more information on apps running.", err)
 	}
-	jsonformated, err := json.MarshalIndent(get_app, "", "  ")
-	fmt.Printf("%v\n", string(jsonformated))
+	jsonFormatted, err := json.MarshalIndent(get_app, "", "  ")
+	fmt.Printf("%v\n", string(jsonFormatted))
 	return nil
 }
 
@@ -150,14 +156,14 @@ func LoginApp() error {
 	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 	s.Color("red")
 
-	fmt.Printf(color.Blue("Starting Appctl Login..") + "\n")
+	fmt.Printf(color.Blue("Starting login process.") + "\n")
 	// Get the device code.
 	deviceCode, err := appAPIs.GetDeviceCode()
 	if err != nil {
 		fmt.Printf("Unable to generate device code.")
 	}
 
-	fmt.Printf("Please verify the device to continue for further process of login..\n")
+	fmt.Printf("Device verification is required to continue login.\n")
 	fmt.Printf("Your Device Confirmation code is: " + color.Yellow(deviceCode.UserCode) + "\n")
 
 	// To open browser, for device verification and SSO.
@@ -182,14 +188,14 @@ func LoginApp() error {
 		// If authorization is still pending in browser.
 		if Token.Error == "authorization_pending" {
 			// This is time interval we can poll for token as per auth0 docs.
-			time.Sleep(5 * time.Second)
+			time.Sleep(constants.TOKENPOLLINTERVAL * time.Second)
 			continue
 		}
 
 		// If device code is expired.
 		if Token.Error == "expired_token" {
 			s.Stop()
-			fmt.Printf("\nYou have not authorized the device quickly, and device code expired.\n")
+			fmt.Printf("\nThe device code was expired as the app was not authorized in time!\n")
 			fmt.Printf("Login again using `appctl login`!!\n")
 			break
 		}
@@ -197,7 +203,7 @@ func LoginApp() error {
 		// If access is Denied.
 		if Token.Error == "access_denied" {
 			s.Stop()
-			fmt.Printf("\n" + color.Red("Access Denied!!") + "\n")
+			fmt.Printf("\n" + color.Red("Cannot login. Please try again.") + "\n")
 			break
 		}
 
@@ -227,10 +233,17 @@ func DeleteApp(
 	if nameSpace == "" {
 		return fmt.Errorf("Namespace not specified.")
 	}
-	// Fetch the detailedapp information for given name from given namespace.
-	err := appAPIs.DeleteAppByName(name, nameSpace)
+
+	// To check if app exists.
+	_, err := appAPIs.GetAppByName(name, nameSpace)
 	if err != nil {
 		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", err)
+	}
+
+	// Fetch the detailedapp information for given name from given namespace.
+	errdel := appAPIs.DeleteAppByName(name, nameSpace)
+	if err != nil {
+		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", errdel)
 	}
 
 	return nil
