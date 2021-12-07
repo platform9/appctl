@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/platform9/pf9-appctl/pkg/appAPIs"
-	"github.com/platform9/pf9-appctl/pkg/constants"
+	"github.com/briandowns/spinner"
+	"github.com/platform9/appctl/pkg/appAPIs"
+	"github.com/platform9/appctl/pkg/browser"
+	"github.com/platform9/appctl/pkg/color"
+	"github.com/platform9/appctl/pkg/constants"
 	"github.com/ryanuber/columnize"
 )
 
@@ -139,5 +142,96 @@ func GetAppByNameInfo(
 	}
 	jsonformated, err := json.MarshalIndent(get_app, "", "  ")
 	fmt.Printf("%v\n", string(jsonformated))
+	return nil
+}
+
+// To login using Device authentication and access appctl.
+func LoginApp() error {
+	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+	s.Color("red")
+
+	fmt.Printf(color.Blue("Starting Appctl Login..") + "\n")
+	// Get the device code.
+	deviceCode, err := appAPIs.GetDeviceCode()
+	if err != nil {
+		fmt.Printf("Unable to generate device code.")
+	}
+
+	fmt.Printf("Please verify the device to continue for further process of login..\n")
+	fmt.Printf("Your Device Confirmation code is: " + color.Yellow(deviceCode.UserCode) + "\n")
+
+	// To open browser, for device verification and SSO.
+	err = browser.OpenBrowser(deviceCode.VerificationUrlComplete)
+	if err != nil {
+		fmt.Printf("\nCouldn't open the URL, kindly do it manually: " + color.Yellow(deviceCode.VerificationUrlComplete) + "\n")
+	}
+
+	var Token *appAPIs.TokenInfo
+
+	// Wait for device verification in browser and if its success request the token.
+	s.Start()
+	s.Suffix = " Waiting for login to complete in browser..."
+
+	for true {
+		// Request for token.
+		Token, err = appAPIs.RequestToken(deviceCode.DeviceCode)
+		if err != nil {
+			fmt.Printf("Falied to fetch token Error:%s", err)
+		}
+
+		// If authorization is still pending in browser.
+		if Token.Error == "authorization_pending" {
+			// This is time interval we can poll for token as per auth0 docs.
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		// If device code is expired.
+		if Token.Error == "expired_token" {
+			s.Stop()
+			fmt.Printf("\nYou have not authorized the device quickly, and device code expired.\n")
+			fmt.Printf("Login again using `appctl login`!!\n")
+			break
+		}
+
+		// If access is Denied.
+		if Token.Error == "access_denied" {
+			s.Stop()
+			fmt.Printf("\n" + color.Red("Access Denied!!") + "\n")
+			break
+		}
+
+		// If token is fetched, then write to config.
+		if Token.AccessToken != "" {
+			s.Stop()
+			/* Things Yet to be implemented:
+			-- To create a config file to store access token and its expire.*/
+			fmt.Printf("\n" + color.Green("✔ ") + "Successfully Logged in!!\n")
+			break
+		}
+	}
+
+	//FetchUserinfo() function needed to be implemented to get user details.
+
+	return nil
+}
+
+// To get a detailed information of particular app by name.
+func DeleteApp(
+	name string, // app name
+	nameSpace string, // namespace to list apps.
+) error {
+	if name == "" {
+		return fmt.Errorf("App Name not specified.")
+	}
+	if nameSpace == "" {
+		return fmt.Errorf("Namespace not specified.")
+	}
+	// Fetch the detailedapp information for given name from given namespace.
+	err := appAPIs.DeleteAppByName(name, nameSpace)
+	if err != nil {
+		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", err)
+	}
+
 	return nil
 }

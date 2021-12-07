@@ -1,0 +1,90 @@
+package cmd
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/platform9/appctl/pkg/appManageAPI"
+	"github.com/spf13/cobra"
+)
+
+// appCmdDelete -- To delete an existing app.
+var (
+	appCmdDelete = &cobra.Command{
+		Use:   "delete",
+		Short: "Delete an existing app",
+		Long:  `Delete an existing app`,
+		Run:   appCmdDeleteRun,
+	}
+)
+
+var (
+	// App name to delete.
+	AppNameDelete string
+	// To force delete an app.
+	force bool
+	//Choice to delete app
+	deleteApp string
+)
+
+func init() {
+	rootCmd.AddCommand(appCmdDelete)
+	appCmdDelete.Flags().StringVarP(&AppNameDelete, "app-name", "n", "", "set app name to delete it")
+	appCmdDelete.Flags().BoolVarP(&force, "force", "f", false, "To force delete an app")
+}
+
+// To delete an app by its name.
+func appCmdDeleteRun(cmd *cobra.Command, args []string) {
+	// Call function to get user namespace from login info.
+	nameSpace, err := appManageAPI.GetNameSpace()
+	if err != nil {
+		fmt.Printf("Not able to get namespace. Error %v\n", err)
+		return
+	}
+	if AppNameDelete == "" {
+		fmt.Printf("App Name not specified.\n")
+		return
+	}
+	// To ask user if to delete app when force delete is false.
+	if !(force) {
+		var count = 0
+		for count < 3 {
+			count++
+			// To make sure delete the app
+			reader := bufio.NewReader(os.Stdin)
+			fmt.Printf("Are you sure you want to delete app (y/n)? ")
+			deleteApp, _ = reader.ReadString('\n')
+			deleteApp = strings.TrimSuffix(deleteApp, "\n")
+
+			// If response is other than "y" or "n"
+			if deleteApp != "y" && deleteApp != "n" {
+				fmt.Printf("You have entered incorrect input. Please Enter valid input.\n")
+				continue
+			}
+			// To delete app if Yes
+			if deleteApp == "y" {
+				errapi := appManageAPI.DeleteApp(AppNameDelete, nameSpace)
+				if errapi != nil {
+					fmt.Printf("%v\n", errapi)
+				}
+				fmt.Printf("Successfully deleted the app: %v\n", AppNameDelete)
+				break
+			}
+			// To stop delete app process if No
+			if deleteApp == "n" {
+				fmt.Printf("You have dis-continued the delete app process!!\n")
+				break
+			}
+		}
+	} else {
+		// If force delete an app.
+		errapi := appManageAPI.DeleteApp(AppNameDelete, nameSpace)
+		if errapi != nil {
+			fmt.Printf("%v\n", errapi)
+		}
+		fmt.Printf("Successfully deleted the app: %v\n", AppNameDelete)
+	}
+
+}

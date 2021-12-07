@@ -15,7 +15,7 @@ VERSION := $(PF9_VERSION)-$(BUILD_NUMBER)
 DETECTED_OS := $(shell uname -s)
 BIN_DIR := $(shell pwd)/bin
 BIN := appctl
-REPO := pf9-appctl
+REPO := appctl
 PACKAGE_GOPATH := /go/src/github.com/platform9/$(REPO)
 LDFLAGS := $(shell source ./version.sh ; KUBE_ROOT=. ; KUBE_GIT_VERSION=${VERSION_OVERRIDE} ; kube::version::ldflags)
 GIT_STORAGE_MOUNT := $(shell source ./git_utils.sh; container_git_storage_mount)

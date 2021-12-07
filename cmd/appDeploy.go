@@ -6,11 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/platform9/pf9-appctl/pkg/appManageAPI"
+	"github.com/platform9/appctl/pkg/appManageAPI"
 	"github.com/spf13/cobra"
 )
 
-// appCmd represents the app commands can be run.
+// appCmdDeploy - To deploy an app.
 var (
 	appCmdDeploy = &cobra.Command{
 		Use:   "deploy",

@@ -3,11 +3,11 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/platform9/pf9-appctl/pkg/appManageAPI"
+	"github.com/platform9/appctl/pkg/appManageAPI"
 	"github.com/spf13/cobra"
 )
 
-// appCmd represents the app commands can be run.
+// appCmdList -- To list all apps running.
 var (
 	appCmdList = &cobra.Command{
 		Use:   "list",
