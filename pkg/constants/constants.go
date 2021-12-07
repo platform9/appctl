@@ -1,10 +1,12 @@
 package constants
 
 var (
-	APPURL      = "http://127.0.0.1:6112/v1/apps"
-	TABLEFORMAT = "NAME | URL | IMAGE | NAMESPACE | CREATIONTIME"
-	DOMAIN      = "platform9.us.auth0.com"
-	CLIENTID    = "HEVMcEBvvQ1wnRmzOxlShZXvjp07bnMz"
+	APPURL               = "http://127.0.0.1:6112/v1/apps"
+	TABLEFORMAT          = "NAME | URL | IMAGE | NAMESPACE | CREATIONTIME"
+	DOMAIN               = "platform9.us.auth0.com"
+	DEVICECODEURL        = "https://" + DOMAIN + "/oauth/device/code"
+	CLIENTID             = "HEVMcEBvvQ1wnRmzOxlShZXvjp07bnMz"
+	DEVICEREQUESTPAYLOAD = "client_id=" + CLIENTID + "&scope=" + GetAllScope()
 
 	// SCOPES for auth0 access token.
 	SCOPEIDS    = "openid offline_access "
@@ -20,6 +22,14 @@ var (
 	SCOPEACTION       = "create:actions delete:actions read:actions update:actions "
 	SCOPEORG          = "create:organizations delete:organizations read:organizations update:organizations "
 	SCOPEOTHER        = "read:client_keys read:logs read:tenant_settings read:prompts update:prompts "
+)
+
+const (
+	// Time to wait to get app deployed.
+	APPDEPLOYINTERVAL = 5
+
+	// Token poll interval
+	TOKENPOLLINTERVAL = 5
 )
 
 func GetAllScope() string {

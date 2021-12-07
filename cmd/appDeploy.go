@@ -25,13 +25,14 @@ type App struct {
 	Image string
 }
 
-var DeployApp App
+// This deployApp is of type App to take app name and app image from user.
+var deployApp App
 
 func init() {
 	rootCmd.AddCommand(appCmdDeploy)
-	appCmdDeploy.Flags().StringVarP(&DeployApp.Name, "app-name", "n", "", `set app name to create 
-(lowercase alphanumeric characters, '_' or '.', must start with alphanumeric characters only)`)
-	appCmdDeploy.Flags().StringVarP(&DeployApp.Image, "image", "i", "", "set app source image to create")
+	appCmdDeploy.Flags().StringVarP(&deployApp.Name, "app-name", "n", "", `Name of the app to be deployed 
+(lowercase alphanumeric characters, '-' or '.', must start with alphanumeric characters only)`)
+	appCmdDeploy.Flags().StringVarP(&deployApp.Image, "image", "i", "", "Container image of the app (public registry path)")
 }
 
 func appCmdDeployRun(cmd *cobra.Command, args []string) {
@@ -41,18 +42,18 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 	}
 	reader := bufio.NewReader(os.Stdin)
 
-	if DeployApp.Name == "" {
+	if deployApp.Name == "" {
 		fmt.Printf("App Name: ")
 		appName, _ := reader.ReadString('\n')
-		DeployApp.Name = strings.TrimSuffix(appName, "\n")
+		deployApp.Name = strings.TrimSuffix(appName, "\n")
 	}
-	if DeployApp.Image == "" {
+	if deployApp.Image == "" {
 		fmt.Printf("Source Image: ")
 		appSourceImage, _ := reader.ReadString('\n')
-		DeployApp.Image = strings.TrimSuffix(appSourceImage, "\n")
+		deployApp.Image = strings.TrimSuffix(appSourceImage, "\n")
 	}
-	errapi := appManageAPI.CreateApp(DeployApp.Name, nameSpace, DeployApp.Image)
+	errapi := appManageAPI.CreateApp(deployApp.Name, nameSpace, deployApp.Image)
 	if errapi != nil {
-		fmt.Printf("\nNot able to create app of source image %v in namespace %v: Error %v\n", DeployApp.Image, nameSpace, errapi)
+		fmt.Printf("\nNot able to deploy app: %v. Error: %v\n", deployApp.Name, errapi)
 	}
 }

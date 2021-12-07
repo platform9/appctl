@@ -11,8 +11,8 @@ import (
 var (
 	loginCmd = &cobra.Command{
 		Use:   "login",
-		Short: "Login to use appctl",
-		Long:  `Login to use appctl`,
+		Short: "Login using Google account to use appctl",
+		Long:  `Login using Google account to use appctl`,
 		Run:   loginCmdRun,
 	}
 )

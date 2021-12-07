@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/platform9/appctl/pkg/color"
 	"github.com/platform9/appctl/pkg/constants"
 )
 
@@ -136,14 +137,14 @@ func (cli_api *appAPI) GetAppByNameAPI() ([]byte, error) {
 
 	resp, err := cli_api.Client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Failed with error: %v", err)
+		return nil, fmt.Errorf("Request processing failed with error: %v", err)
 	}
 
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read the data, error: %v", err)
+		return nil, fmt.Errorf("Failed to read the response. Error: %v", err)
 	}
 	return data, nil
 }
@@ -162,11 +163,11 @@ func GetAppByName(appName string, nameSpace string) (map[string]interface{}, err
 	}
 	// If incorrect app name is given, then empty response.
 	if len(get_app) == 0 {
-		return nil, fmt.Errorf("App might not exist!!")
+		return nil, fmt.Errorf("Cannot find the app " + color.Yellow(appName) + "!!")
 	}
 	err = json.Unmarshal([]byte(get_app), &getAppInfo)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to Unmarshal with error: %s", err)
+		return nil, fmt.Errorf("Failed to parse the response. Error: %s", err)
 	}
 	return getAppInfo, nil
 }
@@ -199,10 +200,9 @@ func (cli_api *appAPI) GetDeviceCodeAPI(getDevice string) ([]byte, error) {
 
 func GetDeviceCode() (*DeviceInfo, error) {
 	// Endpoint to get device code and verification url.
-	url := fmt.Sprintf("https://%s/oauth/device/code", constants.DOMAIN)
+	url := fmt.Sprintf("%s", constants.DEVICECODEURL)
 
-	//deviceRequest := fmt.Sprintf("client_id=%s&scope=%s", constants.CLIENTID, constants.SCOPE)
-	deviceRequest := fmt.Sprintf("client_id=%s&scope=%s", constants.CLIENTID, constants.GetAllScope())
+	deviceRequest := fmt.Sprintf("%s", constants.DEVICEREQUESTPAYLOAD)
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
@@ -283,7 +283,7 @@ func (cli_api *appAPI) DeleteAppByNameAPI() ([]byte, error) {
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read the data, error: %v", err)
+		return nil, fmt.Errorf("Failed to read the response. Error: %v", err)
 	}
 	return data, nil
 }

@@ -31,7 +31,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(appCmdDelete)
-	appCmdDelete.Flags().StringVarP(&AppNameDelete, "app-name", "n", "", "set app name to delete it")
+	appCmdDelete.Flags().StringVarP(&AppNameDelete, "app-name", "n", "", "Provide the name of app to be deleted")
 	appCmdDelete.Flags().BoolVarP(&force, "force", "f", false, "To force delete an app")
 }
 
@@ -60,7 +60,7 @@ func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 
 			// If response is other than "y" or "n"
 			if deleteApp != "y" && deleteApp != "n" {
-				fmt.Printf("You have entered incorrect input. Please Enter valid input.\n")
+				fmt.Printf("Please enter correct input (y/n).\n")
 				continue
 			}
 			// To delete app if Yes
@@ -68,13 +68,14 @@ func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 				errapi := appManageAPI.DeleteApp(AppNameDelete, nameSpace)
 				if errapi != nil {
 					fmt.Printf("%v\n", errapi)
+					return
 				}
 				fmt.Printf("Successfully deleted the app: %v\n", AppNameDelete)
 				break
 			}
 			// To stop delete app process if No
 			if deleteApp == "n" {
-				fmt.Printf("You have dis-continued the delete app process!!\n")
+				fmt.Printf("You have cancelled the app deletion activity!!\n")
 				break
 			}
 		}
@@ -83,6 +84,7 @@ func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 		errapi := appManageAPI.DeleteApp(AppNameDelete, nameSpace)
 		if errapi != nil {
 			fmt.Printf("%v\n", errapi)
+			return
 		}
 		fmt.Printf("Successfully deleted the app: %v\n", AppNameDelete)
 	}
