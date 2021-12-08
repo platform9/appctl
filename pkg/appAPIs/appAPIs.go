@@ -31,6 +31,7 @@ type DeviceInfo struct {
 type TokenInfo struct {
 	AccessToken      string `json:"access_token"`
 	RefreshToken     string `json:"refresh_token"`
+	IdToken          string `json:"id_token"`
 	Scope            string `json:"scope"`
 	ExpiresIn        int    `json:"expires_in"`
 	TokenType        string `json:"token_type"`
@@ -83,7 +84,6 @@ func ListApps(nameSpace string) (map[string]interface{}, error) {
 
 	err = json.Unmarshal([]byte(list_apps), &listAppsInfo)
 	if err != nil {
-		fmt.Printf("The error is %v", err)
 		return nil, fmt.Errorf("Failed to Unmarshal with error: %s", err)
 	}
 	return listAppsInfo, nil
@@ -176,7 +176,6 @@ func GetAppByName(appName string, nameSpace string) (map[string]interface{}, err
 func (cli_api *appAPI) GetDeviceCodeAPI(getDevice string) ([]byte, error) {
 
 	payload := strings.NewReader(getDevice)
-
 	req, err := http.NewRequest("POST", cli_api.BaseURL, payload)
 	if err != nil {
 		return nil, fmt.Errorf("Http request failed with error: %v", err)
@@ -249,7 +248,7 @@ func RequestToken(deviceCode string) (*TokenInfo, error) {
 	// Endpoint to request for token.
 	url := fmt.Sprintf("https://%s/oauth/token", constants.DOMAIN)
 
-	deviceRequest := fmt.Sprintf("grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code=%s&client_id=%s", deviceCode, constants.CLIENTID)
+	deviceRequest := fmt.Sprintf("%s&device_code=%s&client_id=%s", constants.GrantType, deviceCode, constants.CLIENTID)
 
 	client := &http.Client{}
 

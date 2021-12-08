@@ -46,11 +46,13 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 		fmt.Printf("App Name: ")
 		appName, _ := reader.ReadString('\n')
 		deployApp.Name = strings.TrimSuffix(appName, "\n")
+		deployApp.Name = strings.TrimSuffix(deployApp.Name, "\t")
 	}
 	if deployApp.Image == "" {
 		fmt.Printf("Source Image: ")
 		appSourceImage, _ := reader.ReadString('\n')
 		deployApp.Image = strings.TrimSuffix(appSourceImage, "\n")
+		deployApp.Image = strings.TrimSuffix(deployApp.Image, "\t")
 	}
 	errapi := appManageAPI.CreateApp(deployApp.Name, nameSpace, deployApp.Image)
 	if errapi != nil {
