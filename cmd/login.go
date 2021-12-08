@@ -25,6 +25,6 @@ func init() {
 func loginCmdRun(cmd *cobra.Command, args []string) {
 	errapi := appManageAPI.LoginApp()
 	if errapi != nil {
-		fmt.Printf("Not able to login: Error %v", errapi)
+		fmt.Printf("%v", errapi)
 	}
 }
