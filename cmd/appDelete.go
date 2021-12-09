@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/platform9/appctl/pkg/appManageAPI"
+	"github.com/platform9/appctl/pkg/constants"
 	"github.com/spf13/cobra"
 )
 
@@ -65,6 +66,11 @@ func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 			}
 			// To delete app if Yes
 			if deleteApp == "y" {
+				// Validate app name.
+				if !constants.RegexValidate(AppNameDelete) {
+					fmt.Printf("Invalid App name.\n")
+					return
+				}
 				errapi := appManageAPI.DeleteApp(AppNameDelete, nameSpace)
 				if errapi != nil {
 					fmt.Printf("%v\n", errapi)
@@ -80,6 +86,11 @@ func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 			}
 		}
 	} else {
+		// Validate app name.
+		if !constants.RegexValidate(AppNameDelete) {
+			fmt.Printf("Invalid App name.\n")
+			return
+		}
 		// If force delete an app.
 		errapi := appManageAPI.DeleteApp(AppNameDelete, nameSpace)
 		if errapi != nil {

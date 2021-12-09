@@ -3,6 +3,8 @@ package appManageAPI
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -21,12 +23,30 @@ type ListAppInfo struct {
 	CreationTime string
 }
 
+// Config structure for configfile.
+type CONFIG struct {
+	Domain    string
+	IDToken   string
+	ExpiresAt time.Time
+	Scope     []string
+}
+
 // To list apps.
 func ListAppsInfo(
 	nameSpace string, // namespace to list apps.
 ) error {
 	if nameSpace == "" {
 		return fmt.Errorf("Namespace not specified.\n")
+	}
+
+	// Load config, and check if id_token expired
+	config, err := LoadConfig()
+	if err != nil {
+		return fmt.Errorf("Failed to list apps. Please login using command `appctl login`.\n")
+	}
+
+	if config.ExpiresAt.Before(time.Now()) {
+		return fmt.Errorf("Login expired. Please login again using command `appctl login`\n")
 	}
 
 	// To list and store output.
@@ -71,10 +91,6 @@ func ListAppsInfo(
 }
 
 func GetNameSpace() (string, error) {
-	/*Fetch the user details like login id, email, username
-	from config file and get namespace.
-	-- Keeping it default, since login logic is not implemented yet.
-	*/
 	nameSpace := "default"
 	return nameSpace, nil
 }
@@ -91,6 +107,16 @@ func CreateApp(
 	if nameSpace == "" {
 		return fmt.Errorf("Namespace not specified.\n")
 	}
+	// Load config, and check if id_token expired
+	config, err := LoadConfig()
+	if err != nil {
+		return fmt.Errorf("Failed to create app. Please login using command `appctl login`.\n")
+	}
+
+	if config.ExpiresAt.Before(time.Now()) {
+		return fmt.Errorf("Login expired. Please login again using command `appctl login`\n")
+	}
+
 	// To check if app with same name already exists.
 	appExists, err := appAPIs.GetAppByName(name, nameSpace)
 	if err == nil && appExists != nil {
@@ -105,6 +131,7 @@ func CreateApp(
 		return fmt.Errorf("Failed to create app with error: %v", errcreate)
 	}
 
+	time.Sleep(constants.APPDEPLOYINTERVAL * time.Second)
 	// Polling to fetch URL if app is deployed.
 	var count = 0
 	for count <= constants.APPDEPLOYINTERVAL {
@@ -112,15 +139,14 @@ func CreateApp(
 		// Fetch the detailedapp information for given name from given namespace.
 		get_app, err := appAPIs.GetAppByName(name, nameSpace)
 		if err != nil {
-			return fmt.Errorf("Failed to get app information with error: %v\n", err)
-		}
-		// URL/ Endpoint where the app service is available.
-		url := (get_app["status"]).(map[string]interface{})["url"]
-		if url == nil {
-			//Since creation of App takes some time.
 			time.Sleep(constants.APPDEPLOYINTERVAL * time.Second)
 			continue
-		} else {
+		}
+
+		// URL/ Endpoint where the app service is available.
+		url := (get_app["status"]).(map[string]interface{})["url"]
+		if url != nil {
+			//Since creation of App takes some time.
 			fmt.Printf("App " + color.Yellow(name) + " is deployed and can be accessed at URL: " + color.Yellow(url) + "\n")
 			return nil
 		}
@@ -141,6 +167,17 @@ func GetAppByNameInfo(
 	if nameSpace == "" {
 		return fmt.Errorf("Namespace not specified.")
 	}
+
+	// Load config, and check if id_token expired
+	config, err := LoadConfig()
+	if err != nil {
+		return fmt.Errorf("Failed to get app information. Please login using command `appctl login`.\n")
+	}
+
+	if config.ExpiresAt.Before(time.Now()) {
+		return fmt.Errorf("Login expired. Please login again using command `appctl login`\n")
+	}
+
 	// Fetch the detailedapp information for given name from given namespace.
 	get_app, err := appAPIs.GetAppByName(name, nameSpace)
 	if err != nil {
@@ -179,10 +216,16 @@ func LoginApp() error {
 	s.Suffix = " Waiting for login to complete in browser..."
 
 	for true {
-		// Request for token.
+		// Request for token polling.
 		Token, err = appAPIs.RequestToken(deviceCode.DeviceCode)
 		if err != nil {
 			fmt.Printf("Falied to fetch token Error:%s", err)
+		}
+
+		// If token is fetched, then next write to config.
+		if Token.IdToken != "" {
+			s.Stop()
+			break
 		}
 
 		// If authorization is still pending in browser.
@@ -195,29 +238,29 @@ func LoginApp() error {
 		// If device code is expired.
 		if Token.Error == "expired_token" {
 			s.Stop()
-			fmt.Printf("\nThe device code was expired as the app was not authorized in time!\n")
-			fmt.Printf("Login again using `appctl login`!!\n")
-			break
+			return fmt.Errorf("\nThe device code was expired as the app was not authorized in time!\n" +
+				"Login again using `appctl login`!!\n")
 		}
 
 		// If access is Denied.
 		if Token.Error == "access_denied" {
 			s.Stop()
-			fmt.Printf("\n" + color.Red("Cannot login. Please try again.") + "\n")
-			break
-		}
-
-		// If token is fetched, then write to config.
-		if Token.AccessToken != "" {
-			s.Stop()
-			/* Things Yet to be implemented:
-			-- To create a config file to store access token and its expire.*/
-			fmt.Printf("\n" + color.Green("✔ ") + "Successfully Logged in!!\n")
-			break
+			return fmt.Errorf("\n" + color.Red("Cannot login. Please try again.") + "\n")
 		}
 	}
+	// To create and write to config file.
+	var config = CONFIG{Domain: constants.DOMAIN,
+		IDToken:   Token.IdToken,
+		ExpiresAt: time.Now().Add(time.Duration(Token.ExpiresIn) * time.Second),
+		Scope:     constants.RequiredScopes,
+	}
 
-	//FetchUserinfo() function needed to be implemented to get user details.
+	errConfig := CreateConfig(config)
+	if errConfig != nil {
+		return fmt.Errorf("Cannot login. Please try again.\n")
+	}
+
+	fmt.Printf("\n" + color.Green("✔ ") + "Successfully Logged in!!\n")
 
 	return nil
 }
@@ -234,17 +277,68 @@ func DeleteApp(
 		return fmt.Errorf("Namespace not specified.")
 	}
 
-	// To check if app exists.
-	_, err := appAPIs.GetAppByName(name, nameSpace)
+	// Load config, and check if id_token expired
+	config, err := LoadConfig()
 	if err != nil {
-		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", err)
+		return fmt.Errorf("Failed to delete app. Please login using command `appctl login`.\n")
+	}
+
+	if config.ExpiresAt.Before(time.Now()) {
+		return fmt.Errorf("Login expired. Please login again using command `appctl login`\n")
+	}
+
+	// To check if app exists.
+	_, errApp := appAPIs.GetAppByName(name, nameSpace)
+	if errApp != nil {
+		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", errApp)
 	}
 
 	// Fetch the detailedapp information for given name from given namespace.
-	errdel := appAPIs.DeleteAppByName(name, nameSpace)
-	if err != nil {
-		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", errdel)
+	errDel := appAPIs.DeleteAppByName(name, nameSpace)
+	if errDel != nil {
+		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", errDel)
 	}
 
 	return nil
+}
+
+func CreateConfig(config CONFIG) error {
+	//Create the pf9 config directory to store configfile
+	err := CreateDirectoryIfNotExist()
+	if err != nil {
+		return fmt.Errorf("Failed to create config directory!!")
+	}
+
+	data, err := json.MarshalIndent(config, "", "    ")
+	if err != nil {
+		return err
+	}
+	// Write data in to file
+	if err := ioutil.WriteFile(constants.CONFIGFILEPATH, data, 0600); err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateDirectoryIfNotExist() error {
+	// Create a pf9 directory
+	var err error
+	if _, err := os.Stat(constants.CONFIGDIR); os.IsNotExist(err) {
+		if errdir := os.MkdirAll(constants.CONFIGDIR, 0700); errdir != nil {
+			return errdir
+		}
+	}
+	return err
+}
+
+func LoadConfig() (*CONFIG, error) {
+	config, _ := ioutil.ReadFile(constants.CONFIGFILEPATH)
+
+	readConfig := CONFIG{}
+
+	err := json.Unmarshal([]byte(config), &readConfig)
+	if err != nil {
+		return &CONFIG{}, fmt.Errorf("Failed to parse config with error: %s", err)
+	}
+	return &readConfig, nil
 }
