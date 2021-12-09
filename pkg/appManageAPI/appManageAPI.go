@@ -137,14 +137,16 @@ func CreateApp(
 	for count <= constants.APPDEPLOYINTERVAL {
 		count++
 		// Fetch the detailedapp information for given name from given namespace.
-		get_app, _ := appAPIs.GetAppByName(name, nameSpace)
-		// URL/ Endpoint where the app service is available.
-		url := (get_app["status"]).(map[string]interface{})["url"]
-		if url == nil {
-			//Since creation of App takes some time.
+		get_app, err := appAPIs.GetAppByName(name, nameSpace)
+		if err != nil {
 			time.Sleep(constants.APPDEPLOYINTERVAL * time.Second)
 			continue
-		} else {
+		}
+
+		// URL/ Endpoint where the app service is available.
+		url := (get_app["status"]).(map[string]interface{})["url"]
+		if url != nil {
+			//Since creation of App takes some time.
 			fmt.Printf("App " + color.Yellow(name) + " is deployed and can be accessed at URL: " + color.Yellow(url) + "\n")
 			return nil
 		}

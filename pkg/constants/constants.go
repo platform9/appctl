@@ -1,6 +1,10 @@
 package constants
 
-import "os"
+import (
+	"fmt"
+	"os"
+	"regexp"
+)
 
 var (
 	APPURL               = "http://127.0.0.1:6112/v1/apps"
@@ -62,4 +66,15 @@ func GetAllScope() string {
 		scope += val + " "
 	}
 	return (scope)
+}
+
+var (
+	// Valid App Name to deploy.
+	VALIDREGEX = fmt.Sprintf(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`)
+)
+
+// Validate a regex.
+func RegexValidate(name string) bool {
+	Regex := regexp.MustCompile(VALIDREGEX)
+	return Regex.MatchString(name)
 }
