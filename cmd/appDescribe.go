@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/platform9/appctl/pkg/appManageAPI"
+	"github.com/platform9/appctl/pkg/constants"
 	"github.com/spf13/cobra"
 )
 
@@ -31,6 +32,13 @@ func appCmdDescribeRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		fmt.Printf("Not able to get namespace. Error %v\n", err)
 	}
+
+	// Validate app name.
+	if !constants.RegexValidate(AppName) {
+		fmt.Printf("Invalid App name.\n")
+		return
+	}
+
 	errapi := appManageAPI.GetAppByNameInfo(AppName, nameSpace)
 	if errapi != nil {
 		fmt.Printf("%v\n", errapi)
