@@ -171,7 +171,7 @@ func GetAppByNameInfo(
 	// Load config, and check if id_token expired
 	config, err := LoadConfig()
 	if err != nil {
-		return fmt.Errorf("Failed to describe app. Please login using command `appctl login`.\n")
+		return fmt.Errorf("Failed to get app information. Please login using command `appctl login`.\n")
 	}
 
 	if config.ExpiresAt.Before(time.Now()) {
