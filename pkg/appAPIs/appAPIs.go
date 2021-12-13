@@ -302,3 +302,44 @@ func DeleteAppByName(appName string, nameSpace string) error {
 
 	return nil
 }
+
+// Login API
+func (cli_api *appAPI) LoginAPI(token string) ([]byte, error) {
+	req, err := http.NewRequest("POST", cli_api.BaseURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Http request failed with error: %v", err)
+	}
+
+	idToken := fmt.Sprintf("Bearer %s", token)
+	req.Header.Add("Authorization", idToken)
+
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := cli_api.Client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Failed with error: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read the data, error: %v", err)
+	}
+	return data, nil
+}
+
+// Login app
+func Login(token string) error {
+	// Endpoint to login.
+	url := fmt.Sprintf(constants.APPURL + "/login")
+
+	client := &http.Client{}
+
+	cli_api := appAPI{client, url}
+	_, err := cli_api.LoginAPI(token)
+	if err != nil {
+		return err
+	}
+	return nil
+}
