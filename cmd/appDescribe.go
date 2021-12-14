@@ -27,11 +27,6 @@ func init() {
 
 // To get app information by its name
 func appCmdDescribeRun(cmd *cobra.Command, args []string) {
-	// Call function to get user namespace from login info.
-	nameSpace, err := appManageAPI.GetNameSpace()
-	if err != nil {
-		fmt.Printf("Not able to get namespace. Error %v\n", err)
-	}
 	// Check if App name provided.
 	if AppName == "" {
 		fmt.Printf("App Name not specified.\n")
@@ -44,7 +39,7 @@ func appCmdDescribeRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	errapi := appManageAPI.GetAppByNameInfo(AppName, nameSpace)
+	errapi := appManageAPI.GetAppByNameInfo(AppName)
 	if errapi != nil {
 		fmt.Printf("%v\n", errapi)
 	}

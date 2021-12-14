@@ -37,10 +37,6 @@ func init() {
 }
 
 func appCmdDeployRun(cmd *cobra.Command, args []string) {
-	nameSpace, err := appManageAPI.GetNameSpace()
-	if err != nil {
-		fmt.Printf("Not able to get namespace. Error %v\n", err)
-	}
 	reader := bufio.NewReader(os.Stdin)
 
 	if deployApp.Name == "" {
@@ -64,7 +60,7 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 		deployApp.Image = strings.TrimSuffix(deployApp.Image, "\t")
 	}
 
-	errapi := appManageAPI.CreateApp(deployApp.Name, nameSpace, deployApp.Image)
+	errapi := appManageAPI.CreateApp(deployApp.Name, deployApp.Image)
 	if errapi != nil {
 		fmt.Printf("\nNot able to deploy app: %v. Error: %v\n", deployApp.Name, errapi)
 	}
