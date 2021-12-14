@@ -23,12 +23,7 @@ func init() {
 
 // To list apps running in given namespace.
 func appCmdListRun(cmd *cobra.Command, args []string) {
-	// Call function to get user namespace from login info.
-	nameSpace, err := appManageAPI.GetNameSpace()
-	if err != nil {
-		fmt.Printf("Not able to get namespace. Error %v\n", err)
-	}
-	errapi := appManageAPI.ListAppsInfo(nameSpace)
+	errapi := appManageAPI.ListAppsInfo()
 	if errapi != nil {
 		fmt.Printf("%v\n", errapi)
 	}
