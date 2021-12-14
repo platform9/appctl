@@ -5,13 +5,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
+
+	b64 "encoding/base64"
 
 	"github.com/briandowns/spinner"
 	"github.com/platform9/appctl/pkg/appAPIs"
 	"github.com/platform9/appctl/pkg/browser"
 	"github.com/platform9/appctl/pkg/color"
 	"github.com/platform9/appctl/pkg/constants"
+	"github.com/platform9/appctl/pkg/segment"
 	"github.com/ryanuber/columnize"
 )
 
@@ -31,6 +35,12 @@ type CONFIG struct {
 	Scope     []string
 }
 
+type Event struct {
+	EventName string
+	Status    string
+	Data      []ListAppInfo
+}
+
 // To list apps.
 func ListAppsInfo() error {
 	// Load config, and check if id_token expired
@@ -46,6 +56,7 @@ func ListAppsInfo() error {
 	// To list and store output.
 	var list ListAppInfo
 	var Output []string
+	var event Event
 	Output = append(Output, constants.TABLEFORMAT)
 
 	// Fetch the running apps.
@@ -75,8 +86,18 @@ func ListAppsInfo() error {
 				list.URL = fmt.Sprintf("%v", appInfo.(map[string]interface{})["url"])
 			}
 		}
+		event.Data = append(event.Data, list)
 		appinfo := fmt.Sprintf("%v | %v | %v | %v | %v", list.Name, list.URL, list.Image, list.NameSpace, list.CreationTime)
 		Output = append(Output, appinfo)
+	}
+
+	//Event is successfull.
+	event.EventName = "List-Apps"
+	event.Status = "Success"
+	errEvent := Send(event, nil)
+	if errEvent != nil {
+		//Should add as log message
+		//fmt.Printf("%v", errEvent)
 	}
 
 	tabularAppInfo := columnize.SimpleFormat(Output)
@@ -131,6 +152,16 @@ func CreateApp(
 		if url != nil {
 			//Since creation of App takes some time.
 			fmt.Printf("App " + color.Yellow(name) + " is deployed and can be accessed at URL: " + color.Yellow(url) + "\n")
+
+			// Send Segment Event
+			var event Event
+			event.EventName = "Deploy-App"
+			event.Status = "Success"
+			errEvent := Send(event, get_app)
+			if errEvent != nil {
+				// Should add as log message
+				//fmt.Printf("%v", errEvent)
+			}
 			return nil
 		}
 	}
@@ -161,6 +192,17 @@ func GetAppByNameInfo(
 	if err != nil {
 		return fmt.Errorf("Failed to get app information with error: %v\nCheck 'appctl list' for more information on apps running.", err)
 	}
+
+	// Send Segment Event
+	var event Event
+	event.EventName = "Describe-App"
+	event.Status = "Success"
+	errEvent := Send(event, get_app)
+	if errEvent != nil {
+		// Should add as log message
+		//fmt.Printf("%v", errEvent)
+	}
+
 	jsonFormatted, err := json.MarshalIndent(get_app, "", "  ")
 	fmt.Printf("%v\n", string(jsonFormatted))
 	return nil
@@ -248,6 +290,16 @@ func LoginApp() error {
 		return fmt.Errorf("\nCannot login!! Backend server is down. Please try later.\n")
 	}
 
+	// Send Segment Event
+	var event Event
+	event.EventName = "Login"
+	event.Status = "Success"
+	errEvent := Send(event, nil)
+	if errEvent != nil {
+		// Should add as log message
+		//fmt.Printf("%v", errEvent)
+	}
+
 	fmt.Printf("\n" + color.Green("✔ ") + "Successfully Logged in!!\n")
 
 	return nil
@@ -271,15 +323,29 @@ func DeleteApp(
 	}
 
 	// To check if app exists.
-	_, errApp := appAPIs.GetAppByName(name, config.IDToken)
+
+	get_app, errApp := appAPIs.GetAppByName(name, config.IDToken)
 	if errApp != nil {
 		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", errApp)
 	}
+	// Fetch app info prior to deletion.
+	var event Event
+	appInfo, _ := FetchAppInfo(get_app)
+	event.Data = append(event.Data, *appInfo)
 
 	// Fetch the detailedapp information for given appname.
 	errDel := appAPIs.DeleteAppByName(name, config.IDToken)
 	if errDel != nil {
 		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", errDel)
+	}
+
+	// Send Segment Event
+	event.EventName = "Delete-App"
+	event.Status = "Success"
+	errEvent := Send(event, nil)
+	if errEvent != nil {
+		// Should add as log message
+		//fmt.Printf("%v", errEvent)
 	}
 
 	return nil
@@ -332,4 +398,84 @@ func RemoveConfig() error {
 		return fmt.Errorf("Failed to remove config file")
 	}
 	return nil
+}
+
+// To send a segment event.
+func Send(event Event, get_app map[string]interface{}) error {
+	// Create a new Segment client
+	client, err := segment.SegmentClient()
+	if err != nil {
+		return err
+	}
+
+	if get_app != nil {
+		appInfo, _ := FetchAppInfo(get_app)
+		event.Data = append(event.Data, *appInfo)
+	}
+
+	defer segment.Close(client)
+	// Fetch the UserID
+	userId, _ := FetchUserId()
+
+	if err := segment.SendEvent(client, event.EventName, userId, event.Status, event.Data); err != nil {
+		return fmt.Errorf("Failed to send segment event. Error: %v\n", err)
+	}
+
+	return nil
+}
+
+// To fetch UserID, after basic validation of token.
+func FetchUserId() (string, error) {
+
+	// Load config, and fetch the IDToken
+	config, err := LoadConfig()
+	if err != nil {
+		return "", fmt.Errorf("Failed to load config. Please login using command `appctl login`.\n")
+	}
+
+	// To fetch the userEmail and do basic validation using Audiance.
+	payload := strings.Split(config.IDToken, ".")[1]
+
+	decodedPayload, _ := b64.StdEncoding.DecodeString(payload)
+	var payloadstru map[string]interface{}
+
+	errPayload := json.Unmarshal([]byte(string(decodedPayload)+"}"), &payloadstru)
+	if errPayload != nil {
+		return "", errPayload
+	}
+	// Audience, Email, NickName
+	aud := fmt.Sprintf("%v", payloadstru["aud"])
+
+	var userId string
+
+	// Email is empty if token is github login generated.
+	if payloadstru["email"] != nil {
+		userId = fmt.Sprintf("%v", payloadstru["email"])
+	} else {
+		userId = fmt.Sprintf("%v", payloadstru["nickname"])
+	}
+
+	//Basic Validation using audience.
+	if aud == constants.CLIENTID {
+		return userId, nil
+	}
+
+	return "", fmt.Errorf("Token Invalid")
+}
+
+// To fetch App Info.
+func FetchAppInfo(get_app map[string]interface{}) (*ListAppInfo, error) {
+	// Fetch AppName, URL, Image, Namespace, Creation Time from app information.
+	name := fmt.Sprintf("%v", (get_app["metadata"]).(map[string]interface{})["name"])
+	nameSpace := fmt.Sprintf("%v", (get_app["metadata"]).(map[string]interface{})["namespace"])
+	creationTime := fmt.Sprintf("%v", (get_app["metadata"]).(map[string]interface{})["creationTimestamp"])
+
+	url := fmt.Sprintf("%v", (get_app["status"]).(map[string]interface{})["url"])
+
+	template := (get_app["spec"].(map[string]interface{}))["template"].(map[string]interface{})
+	detailedSpec := template["spec"].(map[string]interface{})
+	containers := detailedSpec["containers"].([]interface{})[0]
+
+	Image := fmt.Sprintf("%v", containers.(map[string]interface{})["image"])
+	return &ListAppInfo{name, url, Image, nameSpace, creationTime}, nil
 }
