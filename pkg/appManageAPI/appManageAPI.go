@@ -240,7 +240,12 @@ func LoginApp() error {
 	// Send info to fast-path api.
 	errLogin := appAPIs.Login(config.IDToken)
 	if errLogin != nil {
-		return fmt.Errorf("\nCannot login!! Please try again.\n")
+		err := RemoveConfig()
+		if err != nil {
+			//Should add in log message.
+			//fmt.Printf("Failed to remove config")
+		}
+		return fmt.Errorf("\nCannot login!! Backend server is down. Please try later.\n")
 	}
 
 	fmt.Printf("\n" + color.Green("✔ ") + "Successfully Logged in!!\n")
@@ -319,4 +324,12 @@ func LoadConfig() (*CONFIG, error) {
 		return &CONFIG{}, fmt.Errorf("Failed to parse config with error: %s", err)
 	}
 	return &readConfig, nil
+}
+
+func RemoveConfig() error {
+	err := os.Remove(constants.CONFIGFILEPATH)
+	if err != nil {
+		return fmt.Errorf("Failed to remove config file")
+	}
+	return nil
 }
