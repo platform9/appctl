@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 	"time"
 
-	b64 "encoding/base64"
-
 	"github.com/briandowns/spinner"
+	"github.com/golang-jwt/jwt"
 	"github.com/platform9/appctl/pkg/appAPIs"
 	"github.com/platform9/appctl/pkg/browser"
 	"github.com/platform9/appctl/pkg/color"
@@ -433,34 +431,30 @@ func FetchUserId() (string, error) {
 		return "", fmt.Errorf("Failed to load config. Please login using command `appctl login`.\n")
 	}
 
-	// To fetch the userEmail and do basic validation using Audiance.
-	payload := strings.Split(config.IDToken, ".")[1]
-
-	decodedPayload, _ := b64.StdEncoding.DecodeString(payload)
-	var payloadstru map[string]interface{}
-
-	errPayload := json.Unmarshal([]byte(string(decodedPayload)+"}"), &payloadstru)
-	if errPayload != nil {
-		return "", errPayload
+	// Parse the token.
+	tokens, err := jwt.Parse(config.IDToken, nil)
+	if tokens == nil {
+		fmt.Printf("Empty with error :%v", err)
 	}
-	// Audience, Email, NickName
-	aud := fmt.Sprintf("%v", payloadstru["aud"])
+
+	//Fetch Claims
+	claims, _ := tokens.Claims.(jwt.MapClaims)
+
+	// Doing simple additional validation i.e if audiance == auth0 clientID
+	if claims["aud"] != constants.CLIENTID {
+		return "", fmt.Errorf("Token is invalid")
+	}
 
 	var userId string
 
 	// Email is empty if token is github login generated.
-	if payloadstru["email"] != nil {
-		userId = fmt.Sprintf("%v", payloadstru["email"])
+	if claims["email"] != nil {
+		userId = fmt.Sprintf("%v", claims["email"])
 	} else {
-		userId = fmt.Sprintf("%v", payloadstru["nickname"])
+		userId = fmt.Sprintf("%v", claims["nickname"])
 	}
 
-	//Basic Validation using audience.
-	if aud == constants.CLIENTID {
-		return userId, nil
-	}
-
-	return "", fmt.Errorf("Token Invalid")
+	return userId, nil
 }
 
 // To fetch App Info.
