@@ -238,7 +238,10 @@ func LoginApp() error {
 		return fmt.Errorf("Cannot login. Please try again.\n")
 	}
 	// Send info to fast-path api.
-	appAPIs.Login(config.IDToken)
+	errLogin := appAPIs.Login(config.IDToken)
+	if errLogin != nil {
+		return fmt.Errorf("\nCannot login!! Please try again.\n")
+	}
 
 	fmt.Printf("\n" + color.Green("✔ ") + "Successfully Logged in!!\n")
 
