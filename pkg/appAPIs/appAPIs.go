@@ -48,12 +48,15 @@ var (
 )
 
 // API to list/get all apps.
-func (cli_api *appAPI) ListAppsAPI() ([]byte, error) {
+func (cli_api *appAPI) ListAppsAPI(token string) ([]byte, error) {
 
 	req, err := http.NewRequest("GET", cli_api.BaseURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Http request failed with error: %v", err)
 	}
+
+	idToken := fmt.Sprintf("Bearer %s", token)
+	req.Header.Add("Authorization", idToken)
 
 	resp, err := cli_api.Client.Do(req)
 	if err != nil {
@@ -70,14 +73,14 @@ func (cli_api *appAPI) ListAppsAPI() ([]byte, error) {
 }
 
 // To get all the apps information.
-func ListApps(nameSpace string) (map[string]interface{}, error) {
-	// Endpoint to list apps from a given namespace
-	url := fmt.Sprintf(constants.APPURL+"/%s", nameSpace)
+func ListApps(token string) (map[string]interface{}, error) {
+	// Endpoint to list apps.
+	url := fmt.Sprintf(constants.APPURL)
 
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
-	list_apps, err := cli_api.ListAppsAPI()
+	list_apps, err := cli_api.ListAppsAPI(token)
 	if err != nil {
 		return nil, err
 	}
@@ -90,12 +93,16 @@ func ListApps(nameSpace string) (map[string]interface{}, error) {
 }
 
 // API to list/get all apps.
-func (cli_api *appAPI) CreateAppAPI(createInfo string) ([]byte, error) {
+func (cli_api *appAPI) CreateAppAPI(createInfo string, token string) ([]byte, error) {
 	payload := strings.NewReader(fmt.Sprintf("%s", createInfo))
 	req, err := http.NewRequest("POST", cli_api.BaseURL, payload)
 	if err != nil {
 		return nil, fmt.Errorf("Http request failed with error: %v", err)
 	}
+
+	idToken := fmt.Sprintf("Bearer %s", token)
+	req.Header.Add("Authorization", idToken)
+
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := cli_api.Client.Do(req)
 	if err != nil {
@@ -112,15 +119,15 @@ func (cli_api *appAPI) CreateAppAPI(createInfo string) ([]byte, error) {
 }
 
 // To get all the apps information.
-func CreateApp(name string, nameSpace string, image string) error {
-	// Endpoint to list apps from a given namespace
+func CreateApp(name string, image string, token string) error {
+	// Endpoint to list apps.
 	url := fmt.Sprintf(constants.APPURL)
-	createInfo := fmt.Sprintf(`{"name":"%s", "space":"%s", "image":"%s"}`, name, nameSpace, image)
+	createInfo := fmt.Sprintf(`{"name":"%s", "image":"%s"}`, name, image)
 
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
-	_, err := cli_api.CreateAppAPI(createInfo)
+	_, err := cli_api.CreateAppAPI(createInfo, token)
 	if err != nil {
 		return err
 	}
@@ -128,12 +135,15 @@ func CreateApp(name string, nameSpace string, image string) error {
 }
 
 // API to get a particular app by name.
-func (cli_api *appAPI) GetAppByNameAPI() ([]byte, error) {
+func (cli_api *appAPI) GetAppByNameAPI(token string) ([]byte, error) {
 
 	req, err := http.NewRequest("GET", cli_api.BaseURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Http request failed with error: %v", err)
 	}
+
+	idToken := fmt.Sprintf("Bearer %s", token)
+	req.Header.Add("Authorization", idToken)
 
 	resp, err := cli_api.Client.Do(req)
 	if err != nil {
@@ -150,14 +160,14 @@ func (cli_api *appAPI) GetAppByNameAPI() ([]byte, error) {
 }
 
 // To get a particular app information.
-func GetAppByName(appName string, nameSpace string) (map[string]interface{}, error) {
-	// Endpoint to get a particular app from a given namespace
-	url := fmt.Sprintf(constants.APPURL+"/%s/%s", nameSpace, appName)
+func GetAppByName(appName string, token string) (map[string]interface{}, error) {
+	// Endpoint to get a particular app.
+	url := fmt.Sprintf(constants.APPURL+"/%s", appName)
 
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
-	get_app, err := cli_api.GetAppByNameAPI()
+	get_app, err := cli_api.GetAppByNameAPI(token)
 	if err != nil {
 		return nil, err
 	}
@@ -266,12 +276,15 @@ func RequestToken(deviceCode string) (*TokenInfo, error) {
 }
 
 // API to delete a particular app by name.
-func (cli_api *appAPI) DeleteAppByNameAPI() ([]byte, error) {
+func (cli_api *appAPI) DeleteAppByNameAPI(token string) ([]byte, error) {
 
 	req, err := http.NewRequest("DELETE", cli_api.BaseURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Http request failed with error: %v", err)
 	}
+
+	idToken := fmt.Sprintf("Bearer %s", token)
+	req.Header.Add("Authorization", idToken)
 
 	resp, err := cli_api.Client.Do(req)
 	if err != nil {
@@ -288,17 +301,58 @@ func (cli_api *appAPI) DeleteAppByNameAPI() ([]byte, error) {
 }
 
 // To delete a particular app information.
-func DeleteAppByName(appName string, nameSpace string) error {
-	// Endpoint to get a particular app from a given namespace
-	url := fmt.Sprintf(constants.APPURL+"/%s/%s", nameSpace, appName)
+func DeleteAppByName(appName string, token string) error {
+	// Endpoint to get a particular app.
+	url := fmt.Sprintf(constants.APPURL+"/%s", appName)
 
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
-	_, err := cli_api.DeleteAppByNameAPI()
+	_, err := cli_api.DeleteAppByNameAPI(token)
 	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+// Login API
+func (cli_api *appAPI) LoginAPI(token string) ([]byte, error) {
+	req, err := http.NewRequest("POST", cli_api.BaseURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Http request failed with error: %v", err)
+	}
+
+	idToken := fmt.Sprintf("Bearer %s", token)
+	req.Header.Add("Authorization", idToken)
+
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := cli_api.Client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Failed with error: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read the data, error: %v", err)
+	}
+	return data, nil
+}
+
+// Login app
+func Login(token string) error {
+	// Endpoint to login.
+	url := fmt.Sprintf(constants.APPURL + "/login")
+
+	client := &http.Client{}
+
+	cli_api := appAPI{client, url}
+	_, err := cli_api.LoginAPI(token)
+	if err != nil {
+		return err
+	}
 	return nil
 }

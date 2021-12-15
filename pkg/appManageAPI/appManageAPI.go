@@ -32,13 +32,7 @@ type CONFIG struct {
 }
 
 // To list apps.
-func ListAppsInfo(
-	nameSpace string, // namespace to list apps.
-) error {
-	if nameSpace == "" {
-		return fmt.Errorf("Namespace not specified.\n")
-	}
-
+func ListAppsInfo() error {
 	// Load config, and check if id_token expired
 	config, err := LoadConfig()
 	if err != nil {
@@ -54,8 +48,8 @@ func ListAppsInfo(
 	var Output []string
 	Output = append(Output, constants.TABLEFORMAT)
 
-	// Fetch the running apps in given namespace.
-	list_apps, err := appAPIs.ListApps(nameSpace)
+	// Fetch the running apps.
+	list_apps, err := appAPIs.ListApps(config.IDToken)
 	if err != nil {
 		return fmt.Errorf("Failed to list apps with error: %v\n", err)
 	}
@@ -90,22 +84,13 @@ func ListAppsInfo(
 	return nil
 }
 
-func GetNameSpace() (string, error) {
-	nameSpace := "default"
-	return nameSpace, nil
-}
-
 // To create an app.
 func CreateApp(
 	name string, // App name to create.
-	nameSpace string, // namespace to list apps.
 	image string, // Source Image to create app.
 ) error {
 	if name == "" || image == "" {
 		return fmt.Errorf("Either or both of App Name and Image not specified.\n")
-	}
-	if nameSpace == "" {
-		return fmt.Errorf("Namespace not specified.\n")
 	}
 	// Load config, and check if id_token expired
 	config, err := LoadConfig()
@@ -118,15 +103,13 @@ func CreateApp(
 	}
 
 	// To check if app with same name already exists.
-	appExists, err := appAPIs.GetAppByName(name, nameSpace)
+	appExists, err := appAPIs.GetAppByName(name, config.IDToken)
 	if err == nil && appExists != nil {
 		return fmt.Errorf("App with same name already exists!! Please use different name.")
 	}
 
 	fmt.Printf("Deploying app..\n")
-	// Fetch the running apps in given namespace.
-
-	errcreate := appAPIs.CreateApp(name, nameSpace, image)
+	errcreate := appAPIs.CreateApp(name, image, config.IDToken)
 	if errcreate != nil {
 		return fmt.Errorf("Failed to create app with error: %v", errcreate)
 	}
@@ -136,8 +119,8 @@ func CreateApp(
 	var count = 0
 	for count <= constants.APPDEPLOYINTERVAL {
 		count++
-		// Fetch the detailedapp information for given name from given namespace.
-		get_app, err := appAPIs.GetAppByName(name, nameSpace)
+		// Fetch the detailedapp information for given appname.
+		get_app, err := appAPIs.GetAppByName(name, config.IDToken)
 		if err != nil {
 			time.Sleep(constants.APPDEPLOYINTERVAL * time.Second)
 			continue
@@ -159,15 +142,10 @@ func CreateApp(
 // To get a detailed information of particular app by name.
 func GetAppByNameInfo(
 	name string, // app name
-	nameSpace string, // namespace to list apps.
 ) error {
 	if name == "" {
 		return fmt.Errorf("App Name not specified.")
 	}
-	if nameSpace == "" {
-		return fmt.Errorf("Namespace not specified.")
-	}
-
 	// Load config, and check if id_token expired
 	config, err := LoadConfig()
 	if err != nil {
@@ -178,8 +156,8 @@ func GetAppByNameInfo(
 		return fmt.Errorf("Login expired. Please login again using command `appctl login`\n")
 	}
 
-	// Fetch the detailedapp information for given name from given namespace.
-	get_app, err := appAPIs.GetAppByName(name, nameSpace)
+	// Fetch the detailedapp information for given appname.
+	get_app, err := appAPIs.GetAppByName(name, config.IDToken)
 	if err != nil {
 		return fmt.Errorf("Failed to get app information with error: %v\nCheck 'appctl list' for more information on apps running.", err)
 	}
@@ -259,6 +237,16 @@ func LoginApp() error {
 	if errConfig != nil {
 		return fmt.Errorf("Cannot login. Please try again.\n")
 	}
+	// Send info to fast-path api.
+	errLogin := appAPIs.Login(config.IDToken)
+	if errLogin != nil {
+		err := RemoveConfig()
+		if err != nil {
+			//Should add in log message.
+			//fmt.Printf("Failed to remove config")
+		}
+		return fmt.Errorf("\nCannot login!! Backend server is down. Please try later.\n")
+	}
 
 	fmt.Printf("\n" + color.Green("✔ ") + "Successfully Logged in!!\n")
 
@@ -268,15 +256,10 @@ func LoginApp() error {
 // To get a detailed information of particular app by name.
 func DeleteApp(
 	name string, // app name
-	nameSpace string, // namespace to list apps.
 ) error {
 	if name == "" {
 		return fmt.Errorf("App Name not specified.")
 	}
-	if nameSpace == "" {
-		return fmt.Errorf("Namespace not specified.")
-	}
-
 	// Load config, and check if id_token expired
 	config, err := LoadConfig()
 	if err != nil {
@@ -288,13 +271,13 @@ func DeleteApp(
 	}
 
 	// To check if app exists.
-	_, errApp := appAPIs.GetAppByName(name, nameSpace)
+	_, errApp := appAPIs.GetAppByName(name, config.IDToken)
 	if errApp != nil {
 		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", errApp)
 	}
 
-	// Fetch the detailedapp information for given name from given namespace.
-	errDel := appAPIs.DeleteAppByName(name, nameSpace)
+	// Fetch the detailedapp information for given appname.
+	errDel := appAPIs.DeleteAppByName(name, config.IDToken)
 	if errDel != nil {
 		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", errDel)
 	}
@@ -341,4 +324,12 @@ func LoadConfig() (*CONFIG, error) {
 		return &CONFIG{}, fmt.Errorf("Failed to parse config with error: %s", err)
 	}
 	return &readConfig, nil
+}
+
+func RemoveConfig() error {
+	err := os.Remove(constants.CONFIGFILEPATH)
+	if err != nil {
+		return fmt.Errorf("Failed to remove config file")
+	}
+	return nil
 }
