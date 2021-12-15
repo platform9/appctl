@@ -17,6 +17,12 @@ type appAPI struct {
 	BaseURL string
 }
 
+//Environmnet variable struct.
+type Env struct {
+	key   string
+	value string
+}
+
 // To store device information fetched during device authorization.
 type DeviceInfo struct {
 	DeviceCode              string `json:"device_code"`
@@ -119,10 +125,15 @@ func (cli_api *appAPI) CreateAppAPI(createInfo string, token string) ([]byte, er
 }
 
 // To get all the apps information.
-func CreateApp(name string, image string, token string) error {
+func CreateApp(name string, image string, env map[string]string, token string) error {
 	// Endpoint to list apps.
 	url := fmt.Sprintf(constants.APPURL)
-	createInfo := fmt.Sprintf(`{"name":"%s", "image":"%s"}`, name, image)
+	var createInfo string
+	if env != nil {
+		createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "envs": %v}`, name, image, GenEnvSlice(env))
+	} else {
+		createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s"}`, name, image)
+	}
 
 	client := &http.Client{}
 
@@ -355,4 +366,19 @@ func Login(token string) error {
 		return err
 	}
 	return nil
+}
+
+// Generate environemnt slice as per create command. [{ "key":"ENV1", "value":"val1"}, { "key":"ENV2", "value":"val2"}]
+func GenEnvSlice(env map[string]string) []string {
+	var envSlice []string
+
+	if env != nil {
+		for key, value := range env {
+			envSlice = append(envSlice, fmt.Sprintf(`{"key": "%v", "value": "%v"}`, key, value))
+		}
+	}
+	for count := 0; count < len(envSlice)-1; count++ {
+		envSlice[count] = envSlice[count] + ","
+	}
+	return envSlice
 }
