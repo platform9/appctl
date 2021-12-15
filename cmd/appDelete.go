@@ -38,12 +38,6 @@ func init() {
 
 // To delete an app by its name.
 func appCmdDeleteRun(cmd *cobra.Command, args []string) {
-	// Call function to get user namespace from login info.
-	nameSpace, err := appManageAPI.GetNameSpace()
-	if err != nil {
-		fmt.Printf("Not able to get namespace. Error %v\n", err)
-		return
-	}
 	if AppNameDelete == "" {
 		fmt.Printf("App Name not specified.\n")
 		return
@@ -71,7 +65,7 @@ func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 					fmt.Printf("Invalid App name.\n")
 					return
 				}
-				errapi := appManageAPI.DeleteApp(AppNameDelete, nameSpace)
+				errapi := appManageAPI.DeleteApp(AppNameDelete)
 				if errapi != nil {
 					fmt.Printf("%v\n", errapi)
 					return
@@ -92,7 +86,7 @@ func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 			return
 		}
 		// If force delete an app.
-		errapi := appManageAPI.DeleteApp(AppNameDelete, nameSpace)
+		errapi := appManageAPI.DeleteApp(AppNameDelete)
 		if errapi != nil {
 			fmt.Printf("%v\n", errapi)
 			return
