@@ -11,13 +11,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var deploy_example = `
+  # Deploy an app using app-name and container image (public registory path) 
+  appctl deploy -n appname -i gcr.io/knative-samples/helloworld-go
+  
+  # Deploy an app using app-name and container image, and pass environment variables.
+  appctl deploy -n appname -i image -e key1=value1 -e key2=value2
+ `
+
 // appCmdDeploy - To deploy an app.
 var (
 	appCmdDeploy = &cobra.Command{
-		Use:   "deploy",
-		Short: "Deploy an app",
-		Long:  `Deploy an app`,
-		Run:   appCmdDeployRun,
+		Use:     "deploy",
+		Short:   "Deploy an app",
+		Example: deploy_example,
+		Long:    `Deploy an app`,
+		Run:     appCmdDeployRun,
 	}
 )
 

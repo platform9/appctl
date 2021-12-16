@@ -7,13 +7,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var login_example = `
+  # Login using Google account/Github account to use appctl.
+  appctl login
+ `
+
 // loginCmd represents "Login and use appctl".
 var (
 	loginCmd = &cobra.Command{
-		Use:   "login",
-		Short: "Login using Google account to use appctl",
-		Long:  `Login using Google account to use appctl`,
-		Run:   loginCmdRun,
+		Use:     "login",
+		Short:   "Login using Google account/Github account to use appctl",
+		Example: login_example,
+		Long:    `Login using Google account/Github account to use appctl`,
+		Run:     loginCmdRun,
 	}
 )
 
