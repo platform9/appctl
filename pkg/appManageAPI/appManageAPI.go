@@ -145,13 +145,15 @@ func CreateApp(
 	for count <= constants.APPDEPLOYINTERVAL {
 		count++
 		// Fetch the detailedapp information for given appname.
-		get_app, _ := appAPIs.GetAppByName(name, config.IDToken)
-
+		get_app, err := appAPIs.GetAppByName(name, config.IDToken)
+		if err != nil {
+			time.Sleep(constants.APPDEPLOYINTERVAL * time.Second)
+			continue
+		}
 		// It takes time to get all routes, configuration, ready state up and running.
 		status, invalidImage = checkStatusReady(get_app)
 		if invalidImage != "" {
-			fmt.Printf("Failed to deploy app. Error: %v %v\n", invalidImage, image)
-			break
+			return fmt.Errorf("%v %v\n", invalidImage, image)
 		}
 		if !status {
 			// Wait until stauts of app deployed is ready and true.
@@ -176,7 +178,11 @@ func CreateApp(
 			return nil
 		} else {
 			fmt.Printf("App deploy taking time. Check latest status by running command `appctl list`.\n")
+			return nil
 		}
+	}
+	if !status {
+		fmt.Printf("App deploy taking time. Check latest status by running command `appctl list`.\n")
 	}
 	return nil
 }
