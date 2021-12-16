@@ -13,10 +13,10 @@ import (
 
 var delete_example = `
   # Delete an app using app-name.
-  appctl delete -n appname
+  appctl delete -n <appname>
 
   # Force delete an app using app-name and force flag.
-  appctl delete -n appname -f
+  appctl delete -n <appname> -f
  `
 
 // appCmdDelete -- To delete an existing app.

@@ -10,7 +10,7 @@ import (
 
 var describe_example = `
   # Get detailed information about an app deployed through app-name in json format.
-  appctl describe -n appname
+  appctl describe -n <appname>
  `
 
 // appCmdDescribe -- To describe an app running.

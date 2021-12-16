@@ -13,10 +13,10 @@ import (
 
 var deploy_example = `
   # Deploy an app using app-name and container image (public registory path) 
-  appctl deploy -n appname -i gcr.io/knative-samples/helloworld-go
+  appctl deploy -n <appname> -i gcr.io/knative-samples/helloworld-go
   
   # Deploy an app using app-name and container image, and pass environment variables.
-  appctl deploy -n appname -i image -e key1=value1 -e key2=value2
+  appctl deploy -n <appname> -i <image> -e key1=value1 -e key2=value2
  `
 
 // appCmdDeploy - To deploy an app.
