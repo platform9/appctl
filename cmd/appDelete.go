@@ -11,13 +11,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var delete_example = `
+  # Delete an app using app-name.
+  appctl delete -n appname
+
+  # Force delete an app using app-name and force flag.
+  appctl delete -n appname -f
+ `
+
 // appCmdDelete -- To delete an existing app.
 var (
 	appCmdDelete = &cobra.Command{
-		Use:   "delete",
-		Short: "Delete an existing app",
-		Long:  `Delete an existing app`,
-		Run:   appCmdDeleteRun,
+		Use:     "delete",
+		Short:   "Delete an existing app",
+		Example: delete_example,
+		Long:    `Delete an existing app`,
+		Run:     appCmdDeleteRun,
 	}
 )
 
