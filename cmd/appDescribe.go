@@ -8,13 +8,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var describe_example = `
+  # Get detailed information about an app deployed through app-name in json format.
+  appctl describe -n appname
+ `
+
 // appCmdDescribe -- To describe an app running.
 var (
 	appCmdDescribe = &cobra.Command{
-		Use:   "describe",
-		Short: "Provide detailed app information in json format",
-		Long:  `Provide detailed app information in json format`,
-		Run:   appCmdDescribeRun,
+		Use:     "describe",
+		Short:   "Provide detailed app information in json format",
+		Example: describe_example,
+		Long:    `Provide detailed app information in json format`,
+		Run:     appCmdDescribeRun,
 	}
 )
 
