@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -21,7 +22,7 @@ type ListAppInfo struct {
 	Name         string
 	URL          string
 	Image        string
-	NameSpace    string
+	ReadyStatus  string
 	CreationTime string
 }
 
@@ -63,12 +64,11 @@ func ListAppsInfo() error {
 		return fmt.Errorf("Failed to list apps with error: %v\n", err)
 	}
 
-	// Fetch the App name, namespace deployed in, creationTimestamp
+	// Fetch the ListAppInfo for apps deployed.
 	for _, items := range list_apps["items"].([]interface{}) {
 		for key, appInfo := range items.(map[string]interface{}) {
 			if key == "metadata" {
 				list.Name = fmt.Sprintf("%v", appInfo.(map[string]interface{})["name"])
-				list.NameSpace = fmt.Sprintf("%v", appInfo.(map[string]interface{})["namespace"])
 				list.CreationTime = fmt.Sprintf("%v", appInfo.(map[string]interface{})["creationTimestamp"])
 			}
 			// Fetch the Image name.
@@ -82,10 +82,13 @@ func ListAppsInfo() error {
 			// Fetch the URL Endpoint
 			if key == "status" {
 				list.URL = fmt.Sprintf("%v", appInfo.(map[string]interface{})["url"])
+				conditions := appInfo.(map[string]interface{})["conditions"]
+				readyStatus := conditions.([]interface{})[1].(map[string]interface{})["status"]
+				list.ReadyStatus = fmt.Sprintf("%v", readyStatus)
 			}
 		}
 		event.Data = append(event.Data, list)
-		appinfo := fmt.Sprintf("%v | %v | %v | %v | %v", list.Name, list.URL, list.Image, list.NameSpace, list.CreationTime)
+		appinfo := fmt.Sprintf("%v | %v | %v | %v | %v", list.Name, list.URL, list.Image, list.ReadyStatus, list.CreationTime)
 		Output = append(Output, appinfo)
 	}
 
@@ -137,19 +140,28 @@ func CreateApp(
 	time.Sleep(constants.APPDEPLOYINTERVAL * time.Second)
 	// Polling to fetch URL if app is deployed.
 	var count = 0
+	var status = false
+	var invalidImage string
 	for count <= constants.APPDEPLOYINTERVAL {
 		count++
 		// Fetch the detailedapp information for given appname.
-		get_app, err := appAPIs.GetAppByName(name, config.IDToken)
-		if err != nil {
+		get_app, _ := appAPIs.GetAppByName(name, config.IDToken)
+
+		// It takes time to get all routes, configuration, ready state up and running.
+		status, invalidImage = checkStatusReady(get_app)
+		if invalidImage != "" {
+			fmt.Printf("Failed to deploy app. Error: %v %v\n", invalidImage, image)
+			break
+		}
+		if !status {
+			// Wait until stauts of app deployed is ready and true.
 			time.Sleep(constants.APPDEPLOYINTERVAL * time.Second)
 			continue
 		}
 
-		// URL/ Endpoint where the app service is available.
+		// URL Endpoint where the app service is available.
 		url := (get_app["status"]).(map[string]interface{})["url"]
-		if url != nil {
-			//Since creation of App takes some time.
+		if url != nil && status {
 			fmt.Printf("App " + color.Yellow(name) + " is deployed and can be accessed at URL: " + color.Yellow(url) + "\n")
 
 			// Send Segment Event
@@ -162,11 +174,27 @@ func CreateApp(
 				//fmt.Printf("%v", errEvent)
 			}
 			return nil
+		} else {
+			fmt.Printf("App deploy taking time. Check latest status by running command `appctl list`.\n")
 		}
 	}
-	fmt.Printf("App deploy taking time. Check latest status by running command `appctl list`.\n")
-
 	return nil
+}
+
+// Check if all three status are true and ready.
+func checkStatusReady(get_app map[string]interface{}) (bool, string) {
+	conditions := get_app["status"].(map[string]interface{})["conditions"]
+	configurationStatus := fmt.Sprintf("%s", conditions.([]interface{})[0].(map[string]interface{})["status"])
+	readyStatus := fmt.Sprintf("%s", conditions.([]interface{})[1].(map[string]interface{})["status"])
+	routeStatus := fmt.Sprintf("%s", conditions.([]interface{})[2].(map[string]interface{})["status"])
+	if configurationStatus == "True" && readyStatus == "True" && routeStatus == "True" {
+		return true, ""
+	}
+	configurationMessage := fmt.Sprintf("%s", conditions.([]interface{})[0].(map[string]interface{})["message"])
+	if strings.Contains(configurationMessage, constants.InvalidImage) {
+		return false, constants.InvalidImage
+	}
+	return false, ""
 }
 
 // To get a detailed information of particular app by name.
@@ -413,29 +441,30 @@ func Send(event Event, get_app map[string]interface{}) error {
 	}
 
 	defer segment.Close(client)
-	// Fetch the UserID
-	userId, _ := FetchUserId()
+	// Fetch the UserID and loginType
+	userId, loginType, _ := FetchUserId()
 
-	if err := segment.SendEvent(client, event.EventName, userId, event.Status, event.Data); err != nil {
+	if err := segment.SendEvent(client, event.EventName, userId, event.Status, loginType, event.Data); err != nil {
 		return fmt.Errorf("Failed to send segment event. Error: %v\n", err)
 	}
 
 	return nil
 }
 
-// To fetch UserID, after basic validation of token.
-func FetchUserId() (string, error) {
+// To fetch UserID, and login type after basic validation of token.
+func FetchUserId() (string, string, error) {
 
 	// Load config, and fetch the IDToken
 	config, err := LoadConfig()
 	if err != nil {
-		return "", fmt.Errorf("Failed to load config. Please login using command `appctl login`.\n")
+		return "", "", fmt.Errorf("Failed to load config. Please login using command `appctl login`.\n")
 	}
 
 	// Parse the token.
 	tokens, err := jwt.Parse(config.IDToken, nil)
 	if tokens == nil {
 		fmt.Printf("Empty with error :%v", err)
+		return "", "", fmt.Errorf("Empty with error:%v", err)
 	}
 
 	//Fetch Claims
@@ -443,34 +472,37 @@ func FetchUserId() (string, error) {
 
 	// Doing simple additional validation i.e if audiance == auth0 clientID
 	if claims["aud"] != constants.CLIENTID {
-		return "", fmt.Errorf("Token is invalid")
+		return "", "", fmt.Errorf("Token is invalid")
 	}
 
 	var userId string
+	var loginType string
 
 	// Email is empty if token is github login generated.
 	if claims["email"] != nil {
 		userId = fmt.Sprintf("%v", claims["email"])
+		loginType = "google-auth"
 	} else {
 		userId = fmt.Sprintf("%v", claims["nickname"])
+		loginType = "github"
 	}
 
-	return userId, nil
+	return userId, loginType, nil
 }
 
 // To fetch App Info.
 func FetchAppInfo(get_app map[string]interface{}) (*ListAppInfo, error) {
-	// Fetch AppName, URL, Image, Namespace, Creation Time from app information.
+	// Fetch AppName, URL, Image, ReadyStatus, Creation Time from app information.
 	name := fmt.Sprintf("%v", (get_app["metadata"]).(map[string]interface{})["name"])
-	nameSpace := fmt.Sprintf("%v", (get_app["metadata"]).(map[string]interface{})["namespace"])
 	creationTime := fmt.Sprintf("%v", (get_app["metadata"]).(map[string]interface{})["creationTimestamp"])
-
 	url := fmt.Sprintf("%v", (get_app["status"]).(map[string]interface{})["url"])
-
 	template := (get_app["spec"].(map[string]interface{}))["template"].(map[string]interface{})
 	detailedSpec := template["spec"].(map[string]interface{})
 	containers := detailedSpec["containers"].([]interface{})[0]
 
 	Image := fmt.Sprintf("%v", containers.(map[string]interface{})["image"])
-	return &ListAppInfo{name, url, Image, nameSpace, creationTime}, nil
+	conditions := get_app["status"].(map[string]interface{})["conditions"]
+	readyStatus := fmt.Sprintf("%s", conditions.([]interface{})[1].(map[string]interface{})["status"])
+
+	return &ListAppInfo{name, url, Image, readyStatus, creationTime}, nil
 }
