@@ -78,6 +78,6 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 
 	errapi := appManageAPI.CreateApp(deployApp.Name, deployApp.Image, deployApp.Env, deployApp.Port)
 	if errapi != nil {
-		fmt.Printf("\nNot able to deploy app: %v. Error: %v\n", deployApp.Name, errapi)
+		fmt.Printf("Not able to deploy app: %v.\nError: %v\n", deployApp.Name, errapi)
 	}
 }
