@@ -17,7 +17,10 @@ var deploy_example = `
   
   # Deploy an app using app-name and container image, and pass environment variables.
   appctl deploy -n <appname> -i <image> -e key1=value1 -e key2=value2
- `
+
+  # Deploy an app using app-name, container image and pass environment variables and set port where application listens on.
+  appctl deploy -n <appname> -i <image> -e key1=value1 -e key2=value2 -p <port>
+  `
 
 // appCmdDeploy - To deploy an app.
 var (
@@ -33,7 +36,8 @@ var (
 type App struct {
 	Name  string
 	Image string
-	Env   map[string]string
+	Env   []string
+	Port  string
 }
 
 // This deployApp is of type App to take app name and app image from user.
@@ -44,7 +48,8 @@ func init() {
 	appCmdDeploy.Flags().StringVarP(&deployApp.Name, "app-name", "n", "", `Name of the app to be deployed 
 (lowercase alphanumeric characters, '-' or '.', must start with alphanumeric characters only)`)
 	appCmdDeploy.Flags().StringVarP(&deployApp.Image, "image", "i", "", "Container image of the app (public registry path)")
-	appCmdDeploy.Flags().StringToStringVarP(&deployApp.Env, "env", "e", nil, "Environment variable to set, as key=value pair")
+	appCmdDeploy.Flags().StringArrayVarP(&deployApp.Env, "env", "e", nil, "Environment variable to set, as key=value pair")
+	appCmdDeploy.Flags().StringVarP(&deployApp.Port, "port", "p", "", "The port where application listens on, set as '--port <port>'")
 }
 
 func appCmdDeployRun(cmd *cobra.Command, args []string) {
@@ -71,7 +76,7 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 		deployApp.Image = strings.TrimSuffix(deployApp.Image, "\t")
 	}
 
-	errapi := appManageAPI.CreateApp(deployApp.Name, deployApp.Image, deployApp.Env)
+	errapi := appManageAPI.CreateApp(deployApp.Name, deployApp.Image, deployApp.Env, deployApp.Port)
 	if errapi != nil {
 		fmt.Printf("\nNot able to deploy app: %v. Error: %v\n", deployApp.Name, errapi)
 	}

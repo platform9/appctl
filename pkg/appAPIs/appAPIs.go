@@ -125,13 +125,20 @@ func (cli_api *appAPI) CreateAppAPI(createInfo string, token string) ([]byte, er
 }
 
 // To get all the apps information.
-func CreateApp(name string, image string, env map[string]string, token string) error {
+func CreateApp(name string, image string, env []string, port string, token string) error {
 	// Endpoint to list apps.
 	url := fmt.Sprintf(constants.APPURL)
 	var createInfo string
 	if env != nil {
-		createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "envs": %v}`, name, image, GenEnvSlice(env))
+		if port != "" {
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "port": "%s", "envs": %v}`, name, image, port, GenEnvSlice(env))
+		} else {
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "envs": %v}`, name, image, GenEnvSlice(env))
+		}
 	} else {
+		if port != "" {
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "port": "%s"}`, name, image, port)
+		}
 		createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s"}`, name, image)
 	}
 
@@ -369,12 +376,13 @@ func Login(token string) error {
 }
 
 // Generate environemnt slice as per create command. [{ "key":"ENV1", "value":"val1"}, { "key":"ENV2", "value":"val2"}]
-func GenEnvSlice(env map[string]string) []string {
+func GenEnvSlice(env []string) []string {
 	var envSlice []string
 
 	if env != nil {
-		for key, value := range env {
-			envSlice = append(envSlice, fmt.Sprintf(`{"key": "%v", "value": "%v"}`, key, value))
+		for _, value := range env {
+			splitEnv := strings.Split(value, "=")
+			envSlice = append(envSlice, fmt.Sprintf(`{"key": "%v", "value": "%v"}`, splitEnv[0], splitEnv[1]))
 		}
 	}
 	for count := 0; count < len(envSlice)-1; count++ {

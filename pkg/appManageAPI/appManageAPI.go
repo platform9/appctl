@@ -113,7 +113,8 @@ func ListAppsInfo() error {
 func CreateApp(
 	name string, // App name to create.
 	image string, // Source Image to create app.
-	env map[string]string, // Environment varialbes of app.
+	env []string, // Environment varialbes of app.
+	port string, // Port where application listens on.
 ) error {
 	if name == "" || image == "" {
 		return fmt.Errorf("Either or both of App Name and Image not specified.\n")
@@ -138,7 +139,7 @@ func CreateApp(
 	}
 
 	fmt.Printf("Deploying app..\n")
-	errcreate := appAPIs.CreateApp(name, image, env, config.IDToken)
+	errcreate := appAPIs.CreateApp(name, image, env, port, config.IDToken)
 	if errcreate != nil {
 		return fmt.Errorf("Failed to create app with error: %v", errcreate)
 	}
