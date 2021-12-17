@@ -12,10 +12,6 @@ import (
 	"github.com/platform9/appctl/pkg/constants"
 )
 
-const (
-	MaxAppDeployStatusCode = "429"
-)
-
 // Type definition for struct encapsulating app manager APIs.
 type appAPI struct {
 	Client  *http.Client
@@ -150,7 +146,7 @@ func CreateApp(name string, image string, env []string, port string, token strin
 	if err != nil {
 		return err
 	}
-	if string(data) == MaxAppDeployStatusCode {
+	if string(data) == constants.MaxAppDeployStatusCode {
 		return fmt.Errorf("Maximum apps deploy limit reached!!")
 	}
 	return nil
