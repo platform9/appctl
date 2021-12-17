@@ -5,10 +5,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/platform9/appctl/pkg/color"
 	"github.com/platform9/appctl/pkg/constants"
+)
+
+const (
+	MaxAppDeployStatusCode = "429"
 )
 
 // Type definition for struct encapsulating app manager APIs.
@@ -117,11 +122,7 @@ func (cli_api *appAPI) CreateAppAPI(createInfo string, token string) ([]byte, er
 
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to read the data, error: %v", err)
-	}
-	return data, nil
+	return []byte(strconv.Itoa(resp.StatusCode)), nil
 }
 
 // To get all the apps information.
@@ -145,9 +146,12 @@ func CreateApp(name string, image string, env []string, port string, token strin
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
-	_, err := cli_api.CreateAppAPI(createInfo, token)
+	data, err := cli_api.CreateAppAPI(createInfo, token)
 	if err != nil {
 		return err
+	}
+	if string(data) == MaxAppDeployStatusCode {
+		return fmt.Errorf("Maximum apps deploy limit reached!!")
 	}
 	return nil
 }

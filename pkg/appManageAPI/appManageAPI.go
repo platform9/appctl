@@ -139,9 +139,12 @@ func CreateApp(
 	}
 
 	fmt.Printf("Deploying app..\n")
-	errcreate := appAPIs.CreateApp(name, image, env, port, config.IDToken)
-	if errcreate != nil {
-		return fmt.Errorf("Failed to create app with error: %v", errcreate)
+	errCreate := appAPIs.CreateApp(name, image, env, port, config.IDToken)
+	if errCreate != nil {
+		if errCreate.Error() == constants.MaxAppDeployLimitError {
+			return errCreate
+		}
+		return fmt.Errorf("Failed to create app with error: %v", errCreate)
 	}
 
 	time.Sleep(constants.APPDEPLOYINTERVAL * time.Second)
