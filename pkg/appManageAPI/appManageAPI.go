@@ -48,7 +48,10 @@ func ListAppsInfo() error {
 		return fmt.Errorf("Failed to list apps. Please login using command `appctl login`.\n")
 	}
 
-	if config.ExpiresAt.Before(time.Now()) {
+	// Check if Token is expired or not.
+	expired, _ := checkTokenExpired(config.IDToken)
+
+	if expired {
 		return fmt.Errorf("Login expired. Please login again using command `appctl login`\n")
 	}
 
@@ -121,7 +124,10 @@ func CreateApp(
 		return fmt.Errorf("Failed to create app. Please login using command `appctl login`.\n")
 	}
 
-	if config.ExpiresAt.Before(time.Now()) {
+	// Check if Token is expired or not.
+	expired, _ := checkTokenExpired(config.IDToken)
+
+	if expired {
 		return fmt.Errorf("Login expired. Please login again using command `appctl login`\n")
 	}
 
@@ -216,7 +222,10 @@ func GetAppByNameInfo(
 		return fmt.Errorf("Failed to get app information. Please login using command `appctl login`.\n")
 	}
 
-	if config.ExpiresAt.Before(time.Now()) {
+	// Check if Token is expired or not.
+	expired, _ := checkTokenExpired(config.IDToken)
+
+	if expired {
 		return fmt.Errorf("Login expired. Please login again using command `appctl login`\n")
 	}
 
@@ -351,7 +360,10 @@ func DeleteApp(
 		return fmt.Errorf("Failed to delete app. Please login using command `appctl login`.\n")
 	}
 
-	if config.ExpiresAt.Before(time.Now()) {
+	// Check if Token is expired or not.
+	expired, _ := checkTokenExpired(config.IDToken)
+
+	if expired {
 		return fmt.Errorf("Login expired. Please login again using command `appctl login`\n")
 	}
 
@@ -465,24 +477,13 @@ func FetchUserId() (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to load config. Please login using command `appctl login`.\n")
 	}
-
-	// Parse the token.
-	tokens, err := jwt.Parse(config.IDToken, nil)
-	if tokens == nil {
-		fmt.Printf("Empty with error :%v", err)
-		return "", "", fmt.Errorf("Empty with error:%v", err)
+	// Get the token claims.
+	claims, err := getTokenClaims(config.IDToken)
+	if err != nil {
+		return "", "", fmt.Errorf("%v", err)
 	}
 
-	//Fetch Claims
-	claims, _ := tokens.Claims.(jwt.MapClaims)
-
-	// Doing simple additional validation i.e if audiance == auth0 clientID
-	if claims["aud"] != constants.CLIENTID {
-		return "", "", fmt.Errorf("Token is invalid")
-	}
-
-	var userId string
-	var loginType string
+	var userId, loginType string
 
 	// Email is empty if token is github login generated.
 	if claims["email"] != nil {
@@ -511,4 +512,42 @@ func FetchAppInfo(get_app map[string]interface{}) (*ListAppInfo, error) {
 	readyStatus := fmt.Sprintf("%s", conditions.([]interface{})[1].(map[string]interface{})["status"])
 
 	return &ListAppInfo{name, url, Image, readyStatus, creationTime}, nil
+}
+
+// Basic token validation, and get claims.
+func getTokenClaims(idToken string) (jwt.MapClaims, error) {
+	// Parse the token.
+	tokens, err := jwt.Parse(idToken, nil)
+	if tokens == nil {
+		//fmt.Printf("Empty with error :%v", err)
+		return jwt.MapClaims{}, fmt.Errorf("Empty with error:%v", err)
+	}
+
+	//Fetch Claims
+	claims, _ := tokens.Claims.(jwt.MapClaims)
+
+	// Doing simple additional validation i.e if audiance == auth0 clientID
+	if claims["aud"] != constants.CLIENTID {
+		return jwt.MapClaims{}, fmt.Errorf("Token is invalid.")
+	}
+
+	return claims, nil
+}
+
+func checkTokenExpired(idToken string) (bool, error) {
+	// Get the claims.
+	claims, err := getTokenClaims(idToken)
+	if err != nil {
+		return true, fmt.Errorf("%v", err)
+	}
+	// Check if token is expired.
+	if expiry, ok := claims["exp"].(float64); ok {
+		expiryTime := time.Unix(int64(expiry), 0)
+		if expiryTime.Before(time.Now()) {
+			return true, nil
+		}
+	} else {
+		return true, fmt.Errorf("Can't fetch token expiryAt time.\n")
+	}
+	return false, nil
 }
