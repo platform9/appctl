@@ -51,6 +51,9 @@ const (
 
 	// Token poll interval
 	TOKENPOLLINTERVAL = 5
+
+	// Maximum app deployed status code.
+	MaxAppDeployStatusCode = "429"
 )
 
 //Configfile
