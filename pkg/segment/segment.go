@@ -29,7 +29,7 @@ func SendGroupTraits(c analytics.Client, id string, data map[string]interface{})
 	return nil
 }
 
-func SendEvent(c analytics.Client, name string, id string, status string, data interface{}) error {
+func SendEvent(c analytics.Client, name string, id string, status string, loginType string, data interface{}) error {
 	userID := fmt.Sprintf("appctl-%s", id)
 	// Should be as a log message.
 	//fmt.Printf("Sending event to segment with title: %s, userID: %s\n", name, userID)
@@ -38,6 +38,7 @@ func SendEvent(c analytics.Client, name string, id string, status string, data i
 		Event:  name,
 		Properties: analytics.NewProperties().
 			Set("AppInfo", data).
+			Set("LoginType", loginType).
 			Set("Status", status),
 	}); err != nil {
 		return err
