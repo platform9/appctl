@@ -14,8 +14,9 @@ var (
 	CLIENTID             = "HEVMcEBvvQ1wnRmzOxlShZXvjp07bnMz"
 	DEVICEREQUESTPAYLOAD = "client_id=" + CLIENTID + "&scope=" + GetAllScope()
 	// Grant type is urlencoded
-	GrantType    = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code"
-	InvalidImage = "Unable to fetch image"
+	GrantType              = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code"
+	InvalidImage           = "Unable to fetch image"
+	MaxAppDeployLimitError = "Maximum apps deploy limit reached!!"
 )
 
 // Available SCOPES for auth0 access.
@@ -50,6 +51,9 @@ const (
 
 	// Token poll interval
 	TOKENPOLLINTERVAL = 5
+
+	// Maximum app deployed status code.
+	MaxAppDeployStatusCode = "429"
 )
 
 //Configfile
