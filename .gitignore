@@ -3,7 +3,7 @@ bin
 build
 .vscode
 .env
-pf9-appctl
+appctl
 
 # Test binary
 *.test
