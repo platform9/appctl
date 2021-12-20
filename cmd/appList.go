@@ -31,6 +31,6 @@ func init() {
 func appCmdListRun(cmd *cobra.Command, args []string) {
 	errapi := appManageAPI.ListAppsInfo()
 	if errapi != nil {
-		fmt.Printf("%v\n", errapi)
+		fmt.Printf("%v", errapi)
 	}
 }

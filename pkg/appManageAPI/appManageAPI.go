@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	isconnect "github.com/alimasyhur/is-connect"
 	"github.com/briandowns/spinner"
 	"github.com/golang-jwt/jwt"
 	"github.com/platform9/appctl/pkg/appAPIs"
@@ -28,20 +29,25 @@ type ListAppInfo struct {
 
 // Config structure for configfile.
 type CONFIG struct {
-	Domain    string
 	IDToken   string
 	ExpiresAt time.Time
-	Scope     []string
 }
 
 type Event struct {
 	EventName string
 	Status    string
 	Data      []ListAppInfo
+	Error     string
 }
 
 // To list apps.
 func ListAppsInfo() error {
+
+	//Check Internet Connectivity
+	if !isconnect.IsOnline() {
+		return fmt.Errorf("Network unreachable. %v\n", constants.InternetConnectivity)
+	}
+
 	// Load config, and check if id_token expired
 	config, err := LoadConfig()
 	if err != nil {
@@ -50,7 +56,6 @@ func ListAppsInfo() error {
 
 	// Check if Token is expired or not.
 	expired, _ := checkTokenExpired(config.IDToken)
-
 	if expired {
 		return fmt.Errorf("Login expired. Please login again using command `appctl login`\n")
 	}
@@ -64,6 +69,15 @@ func ListAppsInfo() error {
 	// Fetch the running apps.
 	list_apps, err := appAPIs.ListApps(config.IDToken)
 	if err != nil {
+		//Event is Failure.
+		event.EventName = "List-Apps"
+		event.Status = "Failure"
+		event.Error = err.Error()
+		errEvent := Send(event, nil)
+		if errEvent != nil {
+			//Should add as log message
+			//fmt.Printf("%v", errEvent)
+		}
 		return fmt.Errorf("Failed to list apps with error: %v\n", err)
 	}
 
@@ -119,15 +133,20 @@ func CreateApp(
 	if name == "" || image == "" {
 		return fmt.Errorf("Either or both of App Name and Image not specified.\n")
 	}
+
+	//Check Internet Connectivity
+	if !isconnect.IsOnline() {
+		return fmt.Errorf("Network unreachable. %v\n", constants.InternetConnectivity)
+	}
+
 	// Load config, and check if id_token expired
 	config, err := LoadConfig()
 	if err != nil {
-		return fmt.Errorf("Failed to create app. Please login using command `appctl login`.\n")
+		return fmt.Errorf("Failed to deploy app. Please login using command `appctl login`.\n")
 	}
 
 	// Check if Token is expired or not.
 	expired, _ := checkTokenExpired(config.IDToken)
-
 	if expired {
 		return fmt.Errorf("Login expired. Please login again using command `appctl login`\n")
 	}
@@ -135,16 +154,33 @@ func CreateApp(
 	// To check if app with same name already exists.
 	appExists, err := appAPIs.GetAppByName(name, config.IDToken)
 	if err == nil && appExists != nil {
-		return fmt.Errorf("App with same name already exists!! Please use different name.")
+		return fmt.Errorf("App with same name already exists!! Please use different name.\n")
 	}
 
-	fmt.Printf("Deploying app..\n")
+	// Send Segment Event
+	var event Event
+	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+	s.Color("red")
+	s.Start()
+	s.Suffix = " Deploying app.."
+
 	errCreate := appAPIs.CreateApp(name, image, env, port, config.IDToken)
 	if errCreate != nil {
-		if errCreate.Error() == constants.MaxAppDeployLimitError {
-			return errCreate
+		//Event is Failure.
+		event.EventName = "Deploy-App"
+		event.Status = "Failure"
+		event.Error = errCreate.Error()
+		errEvent := Send(event, nil)
+		if errEvent != nil {
+			//Should add as log message
+			//fmt.Printf("%v", errEvent)
 		}
-		return fmt.Errorf("Failed to create app with error: %v", errCreate)
+		s.Stop()
+		if errCreate.Error() == constants.MaxAppDeployLimitError {
+			return fmt.Errorf("%v\n", errCreate.Error())
+
+		}
+		return fmt.Errorf("%v\n", errCreate)
 	}
 
 	time.Sleep(constants.APPDEPLOYINTERVAL * time.Second)
@@ -163,6 +199,16 @@ func CreateApp(
 		// It takes time to get all routes, configuration, ready state up and running.
 		status, invalidImage = checkStatusReady(get_app)
 		if invalidImage != "" {
+			//Event is Failure.
+			event.EventName = "Deploy-App"
+			event.Status = "Failure"
+			event.Error = invalidImage
+			errEvent := Send(event, get_app)
+			if errEvent != nil {
+				//Should add as log message
+				//fmt.Printf("%v", errEvent)
+			}
+			s.Stop()
 			return fmt.Errorf("%v %v\n", invalidImage, image)
 		}
 		if !status {
@@ -174,10 +220,9 @@ func CreateApp(
 		// URL Endpoint where the app service is available.
 		url := (get_app["status"]).(map[string]interface{})["url"]
 		if url != nil && status {
-			fmt.Printf("App " + color.Yellow(name) + " is deployed and can be accessed at URL: " + color.Yellow(url) + "\n")
-
-			// Send Segment Event
-			var event Event
+			s.Stop()
+			fmt.Printf("\nApp " + color.Yellow(name) + " is deployed and can be accessed at URL: " + color.Yellow(url) + "\n")
+			//Event is Successfull.
 			event.EventName = "Deploy-App"
 			event.Status = "Success"
 			errEvent := Send(event, get_app)
@@ -187,12 +232,14 @@ func CreateApp(
 			}
 			return nil
 		} else {
-			fmt.Printf("App deploy taking time. Check latest status by running command `appctl list`.\n")
+			s.Stop()
+			fmt.Printf("\nApp deploy taking time. Check latest status by running command `appctl list`.\n")
 			return nil
 		}
 	}
 	if !status {
-		fmt.Printf("App deploy taking time. Check latest status by running command `appctl list`.\n")
+		s.Stop()
+		fmt.Printf("\nApp deploy taking time. Check latest status by running command `appctl list`.\n")
 	}
 	return nil
 }
@@ -218,8 +265,14 @@ func GetAppByNameInfo(
 	name string, // app name
 ) error {
 	if name == "" {
-		return fmt.Errorf("App Name not specified.")
+		return fmt.Errorf("App Name not specified.\n")
 	}
+
+	//Check Internet Connectivity
+	if !isconnect.IsOnline() {
+		return fmt.Errorf("Network unreachable. %v\n", constants.InternetConnectivity)
+	}
+
 	// Load config, and check if id_token expired
 	config, err := LoadConfig()
 	if err != nil {
@@ -233,14 +286,24 @@ func GetAppByNameInfo(
 		return fmt.Errorf("Login expired. Please login again using command `appctl login`\n")
 	}
 
+	// Send Segment Event
+	var event Event
+
 	// Fetch the detailedapp information for given appname.
 	get_app, err := appAPIs.GetAppByName(name, config.IDToken)
 	if err != nil {
-		return fmt.Errorf("Failed to get app information with error: %v\nCheck 'appctl list' for more information on apps running.", err)
+		//Event is Failure.
+		event.EventName = "Describe-App"
+		event.Status = "Failure"
+		event.Error = err.Error()
+		errEvent := Send(event, get_app)
+		if errEvent != nil {
+			//Should add as log message
+			//fmt.Printf("%v", errEvent)
+		}
+		return fmt.Errorf("Failed to get app information with error: %v\nCheck 'appctl list' for more information on apps running.\n", err)
 	}
 
-	// Send Segment Event
-	var event Event
 	event.EventName = "Describe-App"
 	event.Status = "Success"
 	errEvent := Send(event, get_app)
@@ -259,11 +322,16 @@ func LoginApp() error {
 	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 	s.Color("red")
 
+	//Check Internet Connectivity
+	if !isconnect.IsOnline() {
+		return fmt.Errorf("Network unreachable. %v\n", constants.InternetConnectivity)
+	}
+
 	fmt.Printf(color.Blue("Starting login process.") + "\n")
 	// Get the device code.
 	deviceCode, err := appAPIs.GetDeviceCode()
 	if err != nil {
-		fmt.Printf("Unable to generate device code.")
+		return fmt.Errorf("Unable to generate device code.\nError: %v\n", err)
 	}
 
 	fmt.Printf("Device verification is required to continue login.\n")
@@ -281,6 +349,8 @@ func LoginApp() error {
 	s.Start()
 	s.Suffix = " Waiting for login to complete in browser..."
 
+	// Send Segment Event
+	var event Event
 	for true {
 		// Request for token polling.
 		Token, err = appAPIs.RequestToken(deviceCode.DeviceCode)
@@ -304,6 +374,15 @@ func LoginApp() error {
 		// If device code is expired.
 		if Token.Error == "expired_token" {
 			s.Stop()
+			//Event is Failure.
+			event.EventName = "Login"
+			event.Status = "Failure"
+			event.Error = Token.Error
+			errEvent := Send(event, nil)
+			if errEvent != nil {
+				//Should add as log message
+				//fmt.Printf("%v", errEvent)
+			}
 			return fmt.Errorf("\nThe device code was expired as the app was not authorized in time!\n" +
 				"Login again using `appctl login`!!\n")
 		}
@@ -311,18 +390,35 @@ func LoginApp() error {
 		// If access is Denied.
 		if Token.Error == "access_denied" {
 			s.Stop()
+			//Event is Failure.
+			event.EventName = "Login"
+			event.Status = "Failure"
+			event.Error = Token.Error
+			errEvent := Send(event, nil)
+			if errEvent != nil {
+				//Should add as log message
+				//fmt.Printf("%v", errEvent)
+			}
 			return fmt.Errorf("\n" + color.Red("Cannot login. Please try again.") + "\n")
 		}
 	}
 	// To create and write to config file.
-	var config = CONFIG{Domain: constants.DOMAIN,
+	var config = CONFIG{
 		IDToken:   Token.IdToken,
 		ExpiresAt: time.Now().Add(time.Duration(Token.ExpiresIn) * time.Second),
-		Scope:     constants.RequiredScopes,
 	}
 
 	errConfig := CreateConfig(config)
 	if errConfig != nil {
+		//Event is Failure.
+		event.EventName = "Login"
+		event.Status = "Failure"
+		event.Error = errConfig.Error()
+		errEvent := Send(event, nil)
+		if errEvent != nil {
+			//Should add as log message
+			//fmt.Printf("%v", errEvent)
+		}
 		return fmt.Errorf("Cannot login. Please try again.\n")
 	}
 	// Send info to fast-path api.
@@ -333,11 +429,18 @@ func LoginApp() error {
 			//Should add in log message.
 			//fmt.Printf("Failed to remove config")
 		}
+		//Event is Failure.
+		event.EventName = "Login"
+		event.Status = "Failure"
+		event.Error = errLogin.Error()
+		errEvent := Send(event, nil)
+		if errEvent != nil {
+			//Should add as log message
+			//fmt.Printf("%v", errEvent)
+		}
 		return fmt.Errorf("\nCannot login!! Backend server is down. Please try later.\n")
 	}
 
-	// Send Segment Event
-	var event Event
 	event.EventName = "Login"
 	event.Status = "Success"
 	errEvent := Send(event, nil)
@@ -356,8 +459,14 @@ func DeleteApp(
 	name string, // app name
 ) error {
 	if name == "" {
-		return fmt.Errorf("App Name not specified.")
+		return fmt.Errorf("App Name not specified.\n")
 	}
+
+	//Check Internet Connectivity
+	if !isconnect.IsOnline() {
+		return fmt.Errorf("Network unreachable. %v\n", constants.InternetConnectivity)
+	}
+
 	// Load config, and check if id_token expired
 	config, err := LoadConfig()
 	if err != nil {
@@ -375,7 +484,7 @@ func DeleteApp(
 
 	get_app, errApp := appAPIs.GetAppByName(name, config.IDToken)
 	if errApp != nil {
-		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", errApp)
+		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.\n", errApp)
 	}
 	// Fetch app info prior to deletion.
 	var event Event
@@ -385,7 +494,16 @@ func DeleteApp(
 	// Fetch the detailedapp information for given appname.
 	errDel := appAPIs.DeleteAppByName(name, config.IDToken)
 	if errDel != nil {
-		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.", errDel)
+		//Event is Failure.
+		event.EventName = "Delete-App"
+		event.Status = "Failure"
+		event.Error = errDel.Error()
+		errEvent := Send(event, nil)
+		if errEvent != nil {
+			//Should add as log message
+			//fmt.Printf("%v", errEvent)
+		}
+		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.\n", errDel)
 	}
 
 	// Send Segment Event
@@ -465,8 +583,7 @@ func Send(event Event, get_app map[string]interface{}) error {
 	defer segment.Close(client)
 	// Fetch the UserID and loginType
 	userId, loginType, _ := FetchUserId()
-
-	if err := segment.SendEvent(client, event.EventName, userId, event.Status, loginType, event.Data); err != nil {
+	if err := segment.SendEvent(client, event.EventName, userId, event.Status, loginType, event.Error, event.Data); err != nil {
 		return fmt.Errorf("Failed to send segment event. Error: %v\n", err)
 	}
 
