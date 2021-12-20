@@ -72,6 +72,11 @@ func (cli_api *appAPI) ListAppsAPI(token string) ([]byte, error) {
 
 	defer resp.Body.Close()
 
+	errStatus := checkStatusCode(resp.StatusCode)
+	if errStatus != nil {
+		return nil, errStatus
+	}
+
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to read the data, error: %v", err)
@@ -89,7 +94,7 @@ func ListApps(token string) (map[string]interface{}, error) {
 	cli_api := appAPI{client, url}
 	list_apps, err := cli_api.ListAppsAPI(token)
 	if err != nil {
-		return nil, err
+		return nil, checkErrors(err)
 	}
 
 	err = json.Unmarshal([]byte(list_apps), &listAppsInfo)
@@ -114,6 +119,10 @@ func (cli_api *appAPI) CreateAppAPI(createInfo string, token string) ([]byte, er
 	resp, err := cli_api.Client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed with error: %v", err)
+	}
+	errStatus := checkStatusCode(resp.StatusCode)
+	if errStatus != nil {
+		return nil, errStatus
 	}
 
 	defer resp.Body.Close()
@@ -142,13 +151,11 @@ func CreateApp(name string, image string, env []string, port string, token strin
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
-	data, err := cli_api.CreateAppAPI(createInfo, token)
+	_, err := cli_api.CreateAppAPI(createInfo, token)
 	if err != nil {
-		return err
+		return checkErrors(err)
 	}
-	if string(data) == constants.MaxAppDeployStatusCode {
-		return fmt.Errorf("Maximum apps deploy limit reached!!")
-	}
+
 	return nil
 }
 
@@ -166,6 +173,11 @@ func (cli_api *appAPI) GetAppByNameAPI(token string) ([]byte, error) {
 	resp, err := cli_api.Client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Request processing failed with error: %v", err)
+	}
+
+	errStatus := checkStatusCode(resp.StatusCode)
+	if errStatus != nil {
+		return nil, errStatus
 	}
 
 	defer resp.Body.Close()
@@ -187,12 +199,19 @@ func GetAppByName(appName string, token string) (map[string]interface{}, error) 
 	cli_api := appAPI{client, url}
 	get_app, err := cli_api.GetAppByNameAPI(token)
 	if err != nil {
-		return nil, err
+		//To handle case where backend server is down, but app exists.
+		if checkServerDown(err) {
+			return nil, fmt.Errorf("%v", constants.BackendServerDown)
+		}
+
+		// If incorrect app name is given, then empty response.
+		if len(get_app) == 0 {
+			return nil, fmt.Errorf("Cannot find the app " + color.Yellow(appName) + "!!")
+		}
+
+		return nil, checkErrors(err)
 	}
-	// If incorrect app name is given, then empty response.
-	if len(get_app) == 0 {
-		return nil, fmt.Errorf("Cannot find the app " + color.Yellow(appName) + "!!")
-	}
+
 	err = json.Unmarshal([]byte(get_app), &getAppInfo)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse the response. Error: %s", err)
@@ -236,7 +255,7 @@ func GetDeviceCode() (*DeviceInfo, error) {
 
 	deviceInfo, err := cli_api.GetDeviceCodeAPI(deviceRequest)
 	if err != nil {
-		return &DeviceInfo{}, err
+		return &DeviceInfo{}, checkErrors(err)
 	}
 
 	err = json.Unmarshal([]byte(deviceInfo), &getDeviceInfo)
@@ -284,8 +303,9 @@ func RequestToken(deviceCode string) (*TokenInfo, error) {
 
 	tokenInfo, err := cli_api.RequestTokenAPI(deviceRequest)
 	if err != nil {
-		return nil, err
+		return nil, checkErrors(err)
 	}
+
 	err = json.Unmarshal([]byte(tokenInfo), &getTokenInfo)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to Unmarshal with error: %s", err)
@@ -309,6 +329,11 @@ func (cli_api *appAPI) DeleteAppByNameAPI(token string) ([]byte, error) {
 		return nil, fmt.Errorf("Failed with error: %v", err)
 	}
 
+	errStatus := checkStatusCode(resp.StatusCode)
+	if errStatus != nil {
+		return nil, errStatus
+	}
+
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
@@ -328,7 +353,7 @@ func DeleteAppByName(appName string, token string) error {
 	cli_api := appAPI{client, url}
 	_, err := cli_api.DeleteAppByNameAPI(token)
 	if err != nil {
-		return err
+		return checkErrors(err)
 	}
 
 	return nil
@@ -351,6 +376,11 @@ func (cli_api *appAPI) LoginAPI(token string) ([]byte, error) {
 		return nil, fmt.Errorf("Failed with error: %v", err)
 	}
 
+	errStatus := checkStatusCode(resp.StatusCode)
+	if errStatus != nil {
+		return nil, errStatus
+	}
+
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
@@ -370,7 +400,7 @@ func Login(token string) error {
 	cli_api := appAPI{client, url}
 	_, err := cli_api.LoginAPI(token)
 	if err != nil {
-		return err
+		return checkErrors(err)
 	}
 	return nil
 }
@@ -389,4 +419,40 @@ func GenEnvSlice(env []string) []string {
 		envSlice[count] = envSlice[count] + ","
 	}
 	return envSlice
+}
+
+// Check the status codes from fast-path.
+func checkStatusCode(statusCode int) error {
+	switch statusCode {
+	case 200:
+		//Success.
+		return nil
+	case 403:
+		// Token Invalid/Expired.
+		return fmt.Errorf(constants.AccessForbidden)
+	case 429:
+		//Maximum apps deploy limit reached.
+		return fmt.Errorf(constants.MaxAppDeployLimit)
+	case 500:
+		//Internal server error.
+		return fmt.Errorf("Backend server error.")
+	default:
+		return nil
+	}
+}
+
+//Check Network, connection errors.
+func checkErrors(err error) error {
+	if checkServerDown(err) {
+		return fmt.Errorf("%v", constants.BackendServerDown)
+	}
+	return err
+}
+
+//Check if backend server is down.
+func checkServerDown(err error) bool {
+	if strings.Contains(err.Error(), constants.ConnectionRefused) {
+		return true
+	}
+	return false
 }

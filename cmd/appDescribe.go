@@ -47,6 +47,6 @@ func appCmdDescribeRun(cmd *cobra.Command, args []string) {
 
 	errapi := appManageAPI.GetAppByNameInfo(AppName)
 	if errapi != nil {
-		fmt.Printf("%v\n", errapi)
+		fmt.Printf("%v", errapi)
 	}
 }
