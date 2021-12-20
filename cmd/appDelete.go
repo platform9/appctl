@@ -76,7 +76,7 @@ func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 				}
 				errapi := appManageAPI.DeleteApp(AppNameDelete)
 				if errapi != nil {
-					fmt.Printf("%v\n", errapi)
+					fmt.Printf("%v", errapi)
 					return
 				}
 				fmt.Printf("Successfully deleted the app: %v\n", AppNameDelete)
@@ -97,7 +97,7 @@ func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 		// If force delete an app.
 		errapi := appManageAPI.DeleteApp(AppNameDelete)
 		if errapi != nil {
-			fmt.Printf("%v\n", errapi)
+			fmt.Printf("%v", errapi)
 			return
 		}
 		fmt.Printf("Successfully deleted the app: %v\n", AppNameDelete)
