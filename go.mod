@@ -14,6 +14,7 @@ require (
 )
 
 require (
+	github.com/alimasyhur/is-connect v0.0.0-20180112042527-a7e9ece095d0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.9 // indirect

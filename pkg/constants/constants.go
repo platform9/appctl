@@ -83,3 +83,17 @@ func RegexValidate(name string) bool {
 	Regex := regexp.MustCompile(VALIDREGEX)
 	return Regex.MatchString(name)
 }
+
+// Error Messages.
+var (
+	ConnectionRefused    = "connection refused"
+	NetworkUnReachable   = "Network is unreachable"
+	InternetConnectivity = "Please check your internet connectivity and try again."
+	BackendServerDown    = "Backend server is down. Please try later!!"
+	AccessForbidden      = "Access Forbidden."
+	MaxAppDeployLimit    = "Maximum apps deploy limit reached!!"
+)
+
+const (
+	CLIVersion = "appctl version: v1.0"
+)

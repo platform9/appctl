@@ -20,6 +20,7 @@ var deploy_example = `
 
   # Deploy an app using app-name, container image and pass environment variables and set port where application listens on.
   appctl deploy -n <appname> -i <image> -e key1=value1 -e key2=value2 -p <port>
+  Ex: appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -e TARGET="appctler" -p 8080
   `
 
 // appCmdDeploy - To deploy an app.
@@ -78,6 +79,6 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 
 	errapi := appManageAPI.CreateApp(deployApp.Name, deployApp.Image, deployApp.Env, deployApp.Port)
 	if errapi != nil {
-		fmt.Printf("Not able to deploy app: %v.\nError: %v\n", deployApp.Name, errapi)
+		fmt.Printf("\nNot able to deploy app: %v.\nError: %v", deployApp.Name, errapi)
 	}
 }
