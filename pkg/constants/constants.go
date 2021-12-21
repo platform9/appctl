@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	APPURL               = "http://127.0.0.1:6112/v1/apps"
+	APPURL               = "http://fastpath.platform9.horse:6112/v1/apps"
 	TABLEFORMAT          = "NAME | URL | IMAGE | READY | CREATIONTIME"
 	DOMAIN               = "appctl.us.auth0.com"
 	DEVICECODEURL        = "https://" + DOMAIN + "/oauth/device/code"
