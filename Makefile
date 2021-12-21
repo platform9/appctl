@@ -57,9 +57,7 @@ build-linux64:
 
 build-all:
 	GO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-mac main.go
-	GO_ENABLED=0 GOOS=windows GOARCH=386 go build -a -o $(BIN_DIR)/$(BIN)-win32 main.go
 	GO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-win64 main.go
-	GO_ENABLED=0 GOOS=linux GOARCH=386 go build -a -o $(BIN_DIR)/$(BIN)-linux32 main.go
 	GO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-linux64 main.go
 
 build:
