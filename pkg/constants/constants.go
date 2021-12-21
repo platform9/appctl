@@ -9,9 +9,9 @@ import (
 var (
 	APPURL               = "http://127.0.0.1:6112/v1/apps"
 	TABLEFORMAT          = "NAME | URL | IMAGE | READY | CREATIONTIME"
-	DOMAIN               = "platform9.us.auth0.com"
+	DOMAIN               = "appctl.us.auth0.com"
 	DEVICECODEURL        = "https://" + DOMAIN + "/oauth/device/code"
-	CLIENTID             = "HEVMcEBvvQ1wnRmzOxlShZXvjp07bnMz"
+	CLIENTID             = "37cBgJP3K2yiYq2gamzEv1sH7vN2x6Z1"
 	DEVICEREQUESTPAYLOAD = "client_id=" + CLIENTID + "&scope=" + GetAllScope()
 	// Grant type is urlencoded
 	GrantType              = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code"
