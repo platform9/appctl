@@ -3,6 +3,7 @@ module github.com/platform9/appctl
 go 1.17
 
 require (
+	github.com/alimasyhur/is-connect v0.0.0-20180112042527-a7e9ece095d0
 	github.com/briandowns/spinner v1.16.0
 	github.com/fatih/color v1.13.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -14,7 +15,6 @@ require (
 )
 
 require (
-	github.com/alimasyhur/is-connect v0.0.0-20180112042527-a7e9ece095d0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.9 // indirect

@@ -18,14 +18,6 @@ import (
 	"github.com/ryanuber/columnize"
 )
 
-type ListAppInfo struct {
-	Name         string
-	URL          string
-	Image        string
-	ReadyStatus  string
-	CreationTime string
-}
-
 // Config structure for configfile.
 type CONFIG struct {
 	IDToken   string
@@ -35,7 +27,7 @@ type CONFIG struct {
 type Event struct {
 	EventName string
 	Status    string
-	Data      []ListAppInfo
+	Data      []constants.ListAppInfo
 	Error     string
 }
 
@@ -60,7 +52,7 @@ func ListAppsInfo() error {
 	}
 
 	// To list and store output.
-	var list ListAppInfo
+	var list constants.ListAppInfo
 	var Output []string
 	var event Event
 	Output = append(Output, constants.TABLEFORMAT)
@@ -574,16 +566,26 @@ func Send(event Event, get_app map[string]interface{}) error {
 		return err
 	}
 
-	if get_app != nil {
-		appInfo, _ := FetchAppInfo(get_app)
-		event.Data = append(event.Data, *appInfo)
-	}
-
 	defer segment.Close(client)
-	// Fetch the UserID and loginType
-	userId, loginType, _ := FetchUserId()
-	if err := segment.SendEvent(client, event.EventName, userId, event.Status, loginType, event.Error, event.Data); err != nil {
-		return fmt.Errorf("Failed to send segment event. Error: %v\n", err)
+
+	// Segment event for List Apps
+	if event.EventName == "List-Apps" {
+		userId, loginType, _ := FetchUserId()
+		if err := segment.SendEventList(client, event.EventName, userId, event.Status, loginType, event.Error, event.Data); err != nil {
+			return fmt.Errorf("Failed to send segment event. Error: %v\n", err)
+		}
+
+	} else {
+		//Segment events for Deploy, describe, delete app.
+		if get_app != nil {
+			appInfo, _ := FetchAppInfo(get_app)
+			event.Data = append(event.Data, *appInfo)
+		}
+		// Fetch the UserID and loginType
+		userId, loginType, _ := FetchUserId()
+		if err := segment.SendEvent(client, event.EventName, userId, event.Status, loginType, event.Error, event.Data); err != nil {
+			return fmt.Errorf("Failed to send segment event. Error: %v\n", err)
+		}
 	}
 
 	return nil
@@ -618,7 +620,7 @@ func FetchUserId() (string, string, error) {
 }
 
 // To fetch App Info.
-func FetchAppInfo(get_app map[string]interface{}) (*ListAppInfo, error) {
+func FetchAppInfo(get_app map[string]interface{}) (*constants.ListAppInfo, error) {
 	// Fetch AppName, URL, Image, ReadyStatus, Creation Time from app information.
 	name := fmt.Sprintf("%v", (get_app["metadata"]).(map[string]interface{})["name"])
 	creationTime := fmt.Sprintf("%v", (get_app["metadata"]).(map[string]interface{})["creationTimestamp"])
@@ -627,11 +629,17 @@ func FetchAppInfo(get_app map[string]interface{}) (*ListAppInfo, error) {
 	detailedSpec := template["spec"].(map[string]interface{})
 	containers := detailedSpec["containers"].([]interface{})[0]
 
+	// Fetch Image.
 	Image := fmt.Sprintf("%v", containers.(map[string]interface{})["image"])
+
+	//Fetch Container Port.
+	containerPort := (containers.(map[string]interface{})["ports"]).([]interface{})[0]
+	port := fmt.Sprintf("%v", containerPort.(map[string]interface{})["containerPort"])
+
+	//Fetch app status.
 	conditions := get_app["status"].(map[string]interface{})["conditions"]
 	readyStatus := fmt.Sprintf("%s", conditions.([]interface{})[1].(map[string]interface{})["status"])
-
-	return &ListAppInfo{name, url, Image, readyStatus, creationTime}, nil
+	return &constants.ListAppInfo{name, url, Image, port, readyStatus, creationTime}, nil
 }
 
 // Basic token validation, and get claims.
