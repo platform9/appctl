@@ -3,6 +3,7 @@ package segment
 import (
 	"fmt"
 
+	"github.com/platform9/appctl/pkg/constants"
 	"gopkg.in/segmentio/analytics-go.v3"
 )
 
@@ -29,7 +30,31 @@ func SendGroupTraits(c analytics.Client, id string, data map[string]interface{})
 	return nil
 }
 
-func SendEvent(c analytics.Client, name string, id string, status string, loginType string, errMessage string, data interface{}) error {
+//Sent event for appctl commands specific to an app.
+func SendEvent(c analytics.Client, name string, id string, status string, loginType string, errMessage string, data []constants.ListAppInfo) error {
+	userID := fmt.Sprintf("appctl-%s", id)
+	data_str := data[0]
+	// Should be as a log message.
+	//fmt.Printf("Sending event to segment with title: %s, userID: %s\n", name, userID)
+	if err := c.Enqueue(analytics.Track{
+		UserId: userID,
+		Event:  name,
+		Properties: analytics.NewProperties().
+			Set("appname", data_str.Name).
+			Set("image", data_str.Image).
+			Set("url", data_str.URL).
+			Set("port", data_str.Port).
+			Set("appstatus", data_str.ReadyStatus).
+			Set("id", id).
+			Set("logintype", loginType).
+			Set("eventstatus", status).
+			Set("error", errMessage),
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+func SendEventList(c analytics.Client, name string, id string, status string, loginType string, errMessage string, data interface{}) error {
 	userID := fmt.Sprintf("appctl-%s", id)
 	// Should be as a log message.
 	//fmt.Printf("Sending event to segment with title: %s, userID: %s\n", name, userID)
@@ -37,11 +62,11 @@ func SendEvent(c analytics.Client, name string, id string, status string, loginT
 		UserId: userID,
 		Event:  name,
 		Properties: analytics.NewProperties().
-			Set("AppInfo", data).
-			Set("ID", id).
-			Set("LoginType", loginType).
-			Set("Status", status).
-			Set("Error", errMessage),
+			Set("appinfo", data).
+			Set("id", id).
+			Set("logintype", loginType).
+			Set("status", status).
+			Set("error", errMessage),
 	}); err != nil {
 		return err
 	}
