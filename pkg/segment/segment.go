@@ -33,7 +33,11 @@ func SendGroupTraits(c analytics.Client, id string, data map[string]interface{})
 //Sent event for appctl commands specific to an app.
 func SendEvent(c analytics.Client, name string, id string, status string, loginType string, errMessage string, data []constants.ListAppInfo) error {
 	userID := fmt.Sprintf("appctl-%s", id)
-	data_str := data[0]
+	var data_str constants.ListAppInfo
+	if data != nil {
+		data_str = data[0]
+	}
+
 	// Should be as a log message.
 	//fmt.Printf("Sending event to segment with title: %s, userID: %s\n", name, userID)
 	if err := c.Enqueue(analytics.Track{
