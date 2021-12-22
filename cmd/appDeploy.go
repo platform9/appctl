@@ -12,15 +12,17 @@ import (
 )
 
 var deploy_example = `
-  # Deploy an app using app-name and container image (public registory path) 
+  # Deploy an app using app-name and container image (public registory path)
+  # Assumes the container has a server that will listen on port 8080
   appctl deploy -n <appname> -i gcr.io/knative-samples/helloworld-go
   
   # Deploy an app using app-name and container image, and pass environment variables.
+  # Assumes the container has a server that will listen on port 8080
   appctl deploy -n <appname> -i <image> -e key1=value1 -e key2=value2
 
   # Deploy an app using app-name, container image and pass environment variables and set port where application listens on.
   appctl deploy -n <appname> -i <image> -e key1=value1 -e key2=value2 -p <port>
-  Ex: appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -e TARGET="appctler" -p 8080
+  Ex: appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -e TARGET="appctler" -p 7893
   `
 
 // appCmdDeploy - To deploy an app.
@@ -50,7 +52,7 @@ func init() {
 (lowercase alphanumeric characters, '-' or '.', must start with alphanumeric characters only)`)
 	appCmdDeploy.Flags().StringVarP(&deployApp.Image, "image", "i", "", "Container image of the app (public registry path)")
 	appCmdDeploy.Flags().StringArrayVarP(&deployApp.Env, "env", "e", nil, "Environment variable to set, as key=value pair")
-	appCmdDeploy.Flags().StringVarP(&deployApp.Port, "port", "p", "", "The port where application listens on, set as '--port <port>'")
+	appCmdDeploy.Flags().StringVarP(&deployApp.Port, "port", "p", "", "The port where app server listens, set as '--port <port>'")
 }
 
 func appCmdDeployRun(cmd *cobra.Command, args []string) {

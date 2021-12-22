@@ -19,6 +19,15 @@ var (
 	MaxAppDeployLimitError = "Maximum apps deploy limit reached!!"
 )
 
+type ListAppInfo struct {
+	Name         string
+	URL          string
+	Image        string
+	Port         string
+	ReadyStatus  string
+	CreationTime string
+}
+
 // Available SCOPES for auth0 access.
 var AllScopes = []string{
 	"openid",
