@@ -11,7 +11,7 @@ var verbosity bool
 var rootCmd = &cobra.Command{
 	Use: "appctl",
 	Long: `CLI to deploy & manage apps in Platform9 environment.
-Login first using $appctl login to use available commands.`,
+Login first using "appctl login" to use available commands.`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -26,5 +26,5 @@ func init() {
 	//cobra.OnInitialize(initConfig)
 	// To tell Cobra not to provide the default completion command.
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
-	rootCmd.PersistentFlags().BoolVar(&verbosity, "verbose", false, "print verbose logs to console")
+	//rootCmd.PersistentFlags().BoolVar(&verbosity, "verbose", false, "print verbose logs to console")
 }

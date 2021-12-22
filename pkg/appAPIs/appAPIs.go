@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/platform9/appctl/pkg/color"
 	"github.com/platform9/appctl/pkg/constants"
 )
 
@@ -207,7 +206,7 @@ func GetAppByName(appName string, token string) (map[string]interface{}, error) 
 
 		// If incorrect app name is given, then empty response.
 		if len(get_app) == 0 {
-			return nil, fmt.Errorf("Cannot find the app " + color.Yellow(appName) + "!!")
+			return nil, fmt.Errorf("Cannot find the app %v!!", appName)
 		}
 
 		return nil, checkErrors(err)
