@@ -8,7 +8,7 @@ import (
 
 var (
 	APPURL               = "***REMOVED***"
-	TABLEFORMAT          = "NAME | URL | IMAGE | READY | CREATIONTIME"
+	TABLEFORMAT          = "NAME | URL | IMAGE | READY | CREATIONTIME | REASON"
 	DOMAIN               = "***REMOVED***"
 	DEVICECODEURL        = "https://" + DOMAIN + "/oauth/device/code"
 	CLIENTID             = "***REMOVED***"
@@ -26,6 +26,7 @@ type ListAppInfo struct {
 	Port         string
 	ReadyStatus  string
 	CreationTime string
+	Reason       string
 }
 
 // Available SCOPES for auth0 access.
@@ -104,5 +105,6 @@ var (
 )
 
 const (
-	CLIVersion = "appctl version: v1.0"
+	CLIVersion          = "appctl version: v1.0"
+	UTCClusterTimeStamp = "2006-01-02T15:04:05Z"
 )
