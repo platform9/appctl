@@ -569,7 +569,7 @@ func Send(event Event, get_app map[string]interface{}) error {
 	defer segment.Close(client)
 
 	// Segment event for List Apps
-	if event.EventName == "List-Apps" {
+	if event.EventName == "List-Apps" || event.EventName == "Login" {
 		userId, loginType, _ := FetchUserId()
 		if err := segment.SendEventList(client, event.EventName, userId, event.Status, loginType, event.Error, event.Data); err != nil {
 			return fmt.Errorf("Failed to send segment event. Error: %v\n", err)
