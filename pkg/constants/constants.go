@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	APPURL               = "http://fastpath.platform9.horse:6112/v1/apps"
+	APPURL               = "***REMOVED***"
 	TABLEFORMAT          = "NAME | URL | IMAGE | READY | CREATIONTIME"
 	DOMAIN               = "***REMOVED***"
 	DEVICECODEURL        = "https://" + DOMAIN + "/oauth/device/code"
