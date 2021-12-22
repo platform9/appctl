@@ -144,8 +144,9 @@ func CreateApp(name string, image string, env []string, port string, token strin
 	} else {
 		if port != "" {
 			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "port": "%s"}`, name, image, port)
+		} else {
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s"}`, name, image)
 		}
-		createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s"}`, name, image)
 	}
 
 	client := &http.Client{}
