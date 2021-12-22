@@ -75,28 +75,41 @@ func ListAppsInfo() error {
 	// Fetch the ListAppInfo for apps deployed.
 	for _, items := range list_apps["items"].([]interface{}) {
 		for key, appInfo := range items.(map[string]interface{}) {
-			if key == "metadata" {
+			if key == "metadata" && appInfo != nil {
 				list.Name = fmt.Sprintf("%v", appInfo.(map[string]interface{})["name"])
-				list.CreationTime = fmt.Sprintf("%v", appInfo.(map[string]interface{})["creationTimestamp"])
+				creationTime := fmt.Sprintf("%v", appInfo.(map[string]interface{})["creationTimestamp"])
+				list.CreationTime = appCreationTime(creationTime)
 			}
 			// Fetch the Image name.
-			if key == "spec" {
+			if key == "spec" && appInfo != nil {
 				template := (appInfo.(map[string]interface{}))["template"].(map[string]interface{})
-				detailedSpec := template["spec"].(map[string]interface{})
-				containers := detailedSpec["containers"].([]interface{})[0]
-				list.Image = fmt.Sprintf("%v", containers.(map[string]interface{})["image"])
+				if template != nil {
+					detailedSpec := template["spec"].(map[string]interface{})
+					if detailedSpec != nil {
+						containers := detailedSpec["containers"].([]interface{})[0]
+						list.Image = fmt.Sprintf("%v", containers.(map[string]interface{})["image"])
+					}
+				}
 			}
 
 			// Fetch the URL Endpoint
-			if key == "status" {
-				list.URL = fmt.Sprintf("%v", appInfo.(map[string]interface{})["url"])
+			if key == "status" && appInfo != nil {
+				for key, url := range appInfo.(map[string]interface{}) {
+					if key == "url" {
+						list.URL = fmt.Sprintf("%v", url)
+					}
+				}
 				conditions := appInfo.(map[string]interface{})["conditions"]
-				readyStatus := conditions.([]interface{})[1].(map[string]interface{})["status"]
-				list.ReadyStatus = fmt.Sprintf("%v", readyStatus)
+				if conditions != nil {
+					readyStatus := conditions.([]interface{})[1].(map[string]interface{})["status"]
+					list.ReadyStatus = fmt.Sprintf("%v", readyStatus)
+					list.Reason = getResponseMessage(conditions)
+				}
+
 			}
 		}
 		event.Data = append(event.Data, list)
-		appinfo := fmt.Sprintf("%v | %v | %v | %v | %v", list.Name, list.URL, list.Image, list.ReadyStatus, list.CreationTime)
+		appinfo := fmt.Sprintf("%v | %v | %v | %v | %v | %v", list.Name, list.URL, list.Image, list.ReadyStatus, list.CreationTime, list.Reason)
 		Output = append(Output, appinfo)
 	}
 
@@ -237,17 +250,27 @@ func CreateApp(
 
 // Check if all three status are true and ready.
 func checkStatusReady(get_app map[string]interface{}) (bool, string) {
-	conditions := get_app["status"].(map[string]interface{})["conditions"]
-	configurationStatus := fmt.Sprintf("%s", conditions.([]interface{})[0].(map[string]interface{})["status"])
-	readyStatus := fmt.Sprintf("%s", conditions.([]interface{})[1].(map[string]interface{})["status"])
-	routeStatus := fmt.Sprintf("%s", conditions.([]interface{})[2].(map[string]interface{})["status"])
+	var configurationStatus, readyStatus, routeStatus string
+
+	if get_app["status"] != nil {
+		conditions := get_app["status"].(map[string]interface{})["conditions"]
+		if conditions != nil {
+			configurationStatus = fmt.Sprintf("%s", conditions.([]interface{})[0].(map[string]interface{})["status"])
+			readyStatus = fmt.Sprintf("%s", conditions.([]interface{})[1].(map[string]interface{})["status"])
+			routeStatus = fmt.Sprintf("%s", conditions.([]interface{})[2].(map[string]interface{})["status"])
+
+			// Check if Image given is invalid
+			configurationMessage := fmt.Sprintf("%s", conditions.([]interface{})[0].(map[string]interface{})["message"])
+			if strings.Contains(configurationMessage, constants.InvalidImage) {
+				return false, constants.InvalidImage
+			}
+		}
+	}
+
 	if configurationStatus == "True" && readyStatus == "True" && routeStatus == "True" {
 		return true, ""
 	}
-	configurationMessage := fmt.Sprintf("%s", conditions.([]interface{})[0].(map[string]interface{})["message"])
-	if strings.Contains(configurationMessage, constants.InvalidImage) {
-		return false, constants.InvalidImage
-	}
+
 	return false, ""
 }
 
@@ -622,24 +645,42 @@ func FetchUserId() (string, string, error) {
 // To fetch App Info.
 func FetchAppInfo(get_app map[string]interface{}) (*constants.ListAppInfo, error) {
 	// Fetch AppName, URL, Image, ReadyStatus, Creation Time from app information.
-	name := fmt.Sprintf("%v", (get_app["metadata"]).(map[string]interface{})["name"])
-	creationTime := fmt.Sprintf("%v", (get_app["metadata"]).(map[string]interface{})["creationTimestamp"])
-	url := fmt.Sprintf("%v", (get_app["status"]).(map[string]interface{})["url"])
-	template := (get_app["spec"].(map[string]interface{}))["template"].(map[string]interface{})
-	detailedSpec := template["spec"].(map[string]interface{})
-	containers := detailedSpec["containers"].([]interface{})[0]
+	var name, creationTime, url, image, readyStatus, port, reason string
 
-	// Fetch Image.
-	Image := fmt.Sprintf("%v", containers.(map[string]interface{})["image"])
+	if get_app["metadata"] != nil {
+		name = fmt.Sprintf("%v", (get_app["metadata"]).(map[string]interface{})["name"])
+		creationTime = fmt.Sprintf("%v", (get_app["metadata"]).(map[string]interface{})["creationTimestamp"])
+	}
 
-	//Fetch Container Port.
-	containerPort := (containers.(map[string]interface{})["ports"]).([]interface{})[0]
-	port := fmt.Sprintf("%v", containerPort.(map[string]interface{})["containerPort"])
+	if get_app["status"] != nil {
+		// Fetch URL
+		url = fmt.Sprintf("%v", (get_app["status"]).(map[string]interface{})["url"])
 
-	//Fetch app status.
-	conditions := get_app["status"].(map[string]interface{})["conditions"]
-	readyStatus := fmt.Sprintf("%s", conditions.([]interface{})[1].(map[string]interface{})["status"])
-	return &constants.ListAppInfo{name, url, Image, port, readyStatus, creationTime}, nil
+		//Fetch app status.
+		conditions := get_app["status"].(map[string]interface{})["conditions"]
+		if len(conditions.([]interface{})) > 2 {
+			reason = getResponseMessage(conditions)
+			readyStatus = fmt.Sprintf("%s", conditions.([]interface{})[1].(map[string]interface{})["status"])
+		}
+	}
+
+	if get_app["spec"] != nil {
+		template := (get_app["spec"].(map[string]interface{}))["template"].(map[string]interface{})
+		if template != nil {
+			detailedSpec := template["spec"].(map[string]interface{})
+			if detailedSpec != nil {
+				containers := detailedSpec["containers"].([]interface{})[0]
+				// Fetch Image.
+				image = fmt.Sprintf("%v", containers.(map[string]interface{})["image"])
+
+				//Fetch Container Port.
+				port = getPort(containers.(map[string]interface{}))
+			}
+
+		}
+	}
+
+	return &constants.ListAppInfo{name, url, image, port, readyStatus, creationTime, reason}, nil
 }
 
 // Basic token validation, and get claims.
@@ -678,4 +719,42 @@ func checkTokenExpired(idToken string) (bool, error) {
 		return true, fmt.Errorf("Can't fetch token expiryAt time.\n")
 	}
 	return false, nil
+}
+
+// Get the container port
+func getPort(container map[string]interface{}) string {
+	for key, value := range container {
+		if key == "ports" {
+			port := value.([]interface{})[0].(map[string]interface{})["containerPort"]
+			return fmt.Sprintf("%v", port)
+		}
+	}
+	return ""
+}
+
+//App creation time to hours convertion.
+func appCreationTime(appCreationTime string) string {
+	appCreatedTimeParsed, err := time.Parse(constants.UTCClusterTimeStamp, appCreationTime)
+	if err != nil {
+		// If can't parse then return same UTC time stamp.
+		return appCreationTime
+	}
+	currentTime := time.Now()
+	return currentTime.Sub(appCreatedTimeParsed).String()
+}
+
+//Get the response message for deployed apps.
+func getResponseMessage(conditions interface{}) string {
+	readyStatus := conditions.([]interface{})[1].(map[string]interface{})["status"]
+	//fmt.Printf("The ready status is %v\n", readyStatus)
+	if readyStatus != "True" {
+		configurationMessage := fmt.Sprintf("%s", conditions.([]interface{})[0].(map[string]interface{})["message"])
+		if strings.Contains(configurationMessage, constants.InvalidImage) {
+			return constants.InvalidImage
+		}
+		readyMessage := fmt.Sprintf("%v", conditions.([]interface{})[1].(map[string]interface{})["message"])
+		readyReason := fmt.Sprintf("%v", conditions.([]interface{})[1].(map[string]interface{})["reason"])
+		return fmt.Sprintf("%v  %v", readyReason, readyMessage)
+	}
+	return "nil"
 }

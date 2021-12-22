@@ -8,7 +8,7 @@ import (
 
 var (
 	APPURL               = "http://fastpath.appctl.net:6112/v1/apps"
-	TABLEFORMAT          = "NAME | URL | IMAGE | READY | CREATIONTIME"
+	TABLEFORMAT          = "NAME | URL | IMAGE | READY | CREATIONTIME | REASON"
 	DOMAIN               = "appctl.us.auth0.com"
 	DEVICECODEURL        = "https://" + DOMAIN + "/oauth/device/code"
 	CLIENTID             = "37cBgJP3K2yiYq2gamzEv1sH7vN2x6Z1"
@@ -26,6 +26,7 @@ type ListAppInfo struct {
 	Port         string
 	ReadyStatus  string
 	CreationTime string
+	Reason       string
 }
 
 // Available SCOPES for auth0 access.
@@ -104,5 +105,6 @@ var (
 )
 
 const (
-	CLIVersion = "appctl version: v1.0"
+	CLIVersion          = "appctl version: v1.0"
+	UTCClusterTimeStamp = "2006-01-02T15:04:05Z"
 )
