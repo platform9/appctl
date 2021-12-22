@@ -13,7 +13,6 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/platform9/appctl/pkg/appAPIs"
 	"github.com/platform9/appctl/pkg/browser"
-	"github.com/platform9/appctl/pkg/color"
 	"github.com/platform9/appctl/pkg/constants"
 	"github.com/platform9/appctl/pkg/segment"
 	"github.com/ryanuber/columnize"
@@ -221,7 +220,7 @@ func CreateApp(
 		url := (get_app["status"]).(map[string]interface{})["url"]
 		if url != nil && status {
 			s.Stop()
-			fmt.Printf("\nApp " + color.Yellow(name) + " is deployed and can be accessed at URL: " + color.Yellow(url) + "\n")
+			fmt.Printf("\nApp %v is deployed and can be accessed at URL: %v\n", name, url)
 			//Event is Successfull.
 			event.EventName = "Deploy-App"
 			event.Status = "Success"
@@ -327,7 +326,7 @@ func LoginApp() error {
 		return fmt.Errorf("Network unreachable. %v\n", constants.InternetConnectivity)
 	}
 
-	fmt.Printf(color.Blue("Starting login process.") + "\n")
+	fmt.Printf("Starting login process.\n")
 	// Get the device code.
 	deviceCode, err := appAPIs.GetDeviceCode()
 	if err != nil {
@@ -335,12 +334,12 @@ func LoginApp() error {
 	}
 
 	fmt.Printf("Device verification is required to continue login.\n")
-	fmt.Printf("Your Device Confirmation code is: " + color.Yellow(deviceCode.UserCode) + "\n")
+	fmt.Printf("Your Device Confirmation code is: %v\n", deviceCode.UserCode)
 
 	// To open browser, for device verification and SSO.
 	err = browser.OpenBrowser(deviceCode.VerificationUrlComplete)
 	if err != nil {
-		fmt.Printf("\nCouldn't open the URL, kindly do it manually: " + color.Yellow(deviceCode.VerificationUrlComplete) + "\n")
+		fmt.Printf("\nCouldn't open the URL, kindly do it manually: %v\n", deviceCode.VerificationUrlComplete)
 	}
 
 	var Token *appAPIs.TokenInfo
@@ -399,7 +398,7 @@ func LoginApp() error {
 				//Should add as log message
 				//fmt.Printf("%v", errEvent)
 			}
-			return fmt.Errorf("\n" + color.Red("Cannot login. Please try again.") + "\n")
+			return fmt.Errorf("\nCannot login. Please try again.\n")
 		}
 	}
 	// To create and write to config file.
@@ -449,7 +448,7 @@ func LoginApp() error {
 		//fmt.Printf("%v", errEvent)
 	}
 
-	fmt.Printf("\n" + color.Green("✔ ") + "Successfully Logged in!!\n")
+	fmt.Printf("\nSuccessfully Logged in!!\n")
 
 	return nil
 }
