@@ -40,7 +40,7 @@ func appCmdDescribeRun(cmd *cobra.Command, args []string) {
 	}
 
 	// Validate app name.
-	if !constants.RegexValidate(AppName) {
+	if !constants.RegexValidate(AppName, constants.ValidAppNameRegex) {
 		fmt.Printf("Invalid App name.\n")
 		return
 	}
