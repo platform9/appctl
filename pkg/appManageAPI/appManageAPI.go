@@ -740,7 +740,9 @@ func appCreationTime(appCreationTime string) string {
 		return appCreationTime
 	}
 	currentTime := time.Now()
-	return currentTime.Sub(appCreatedTimeParsed).String()
+	appCreateTime := currentTime.Sub(appCreatedTimeParsed).String()
+	// Consider only seconds, exclude micro/nano seconds.
+	return fmt.Sprintf("%ss", strings.Split(appCreateTime, ".")[0])
 }
 
 //Get the response message for deployed apps.

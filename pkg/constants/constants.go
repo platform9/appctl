@@ -6,6 +6,7 @@ import (
 	"regexp"
 )
 
+// API Variables.
 var (
 	APPURL               = "***REMOVED***"
 	TABLEFORMAT          = "NAME | URL | IMAGE | READY | CREATIONTIME | REASON"
@@ -14,9 +15,7 @@ var (
 	CLIENTID             = "***REMOVED***"
 	DEVICEREQUESTPAYLOAD = "client_id=" + CLIENTID + "&scope=" + GetAllScope()
 	// Grant type is urlencoded
-	GrantType              = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code"
-	InvalidImage           = "Unable to fetch image"
-	MaxAppDeployLimitError = "Maximum apps deploy limit reached!!"
+	GrantType = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code"
 )
 
 type ListAppInfo struct {
@@ -85,23 +84,25 @@ func GetAllScope() string {
 
 var (
 	// Valid App Name to deploy.
-	VALIDREGEX = fmt.Sprintf(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`)
+	ValidAppNameRegex = fmt.Sprintf(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`)
 )
 
 // Validate a regex.
-func RegexValidate(name string) bool {
-	Regex := regexp.MustCompile(VALIDREGEX)
+func RegexValidate(name string, regex string) bool {
+	Regex := regexp.MustCompile(regex)
 	return Regex.MatchString(name)
 }
 
 // Error Messages.
 var (
-	ConnectionRefused    = "connection refused"
-	NetworkUnReachable   = "Network is unreachable"
-	InternetConnectivity = "Please check your internet connectivity and try again."
-	BackendServerDown    = "Backend server is down. Please try later!!"
-	AccessForbidden      = "Access Forbidden."
-	MaxAppDeployLimit    = "Maximum apps deploy limit reached!!"
+	ConnectionRefused      = "connection refused"
+	NetworkUnReachable     = "Network is unreachable"
+	InternetConnectivity   = "Please check your internet connectivity and try again."
+	BackendServerDown      = "Backend server is down. Please try later!!"
+	AccessForbidden        = "Access Forbidden."
+	MaxAppDeployLimit      = "Maximum apps deploy limit reached!!"
+	InvalidImage           = "Unable to fetch image"
+	MaxAppDeployLimitError = "Maximum apps deploy limit reached!!"
 )
 
 const (
