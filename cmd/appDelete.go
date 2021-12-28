@@ -70,7 +70,7 @@ func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 			// To delete app if Yes
 			if deleteApp == "y" {
 				// Validate app name.
-				if !constants.RegexValidate(AppNameDelete) {
+				if !constants.RegexValidate(AppNameDelete, constants.ValidAppNameRegex) {
 					fmt.Printf("Invalid App name.\n")
 					return
 				}
@@ -90,7 +90,7 @@ func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 		}
 	} else {
 		// Validate app name.
-		if !constants.RegexValidate(AppNameDelete) {
+		if !constants.RegexValidate(AppNameDelete, constants.ValidAppNameRegex) {
 			fmt.Printf("Invalid App name.\n")
 			return
 		}
