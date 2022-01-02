@@ -63,7 +63,7 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 		fmt.Printf("App Name: ")
 		appName, _ := reader.ReadString('\n')
 		deployApp.Name = strings.TrimSuffix(appName, "\n")
-		deployApp.Name = strings.TrimSuffix(deployApp.Name, "\t")
+		deployApp.Name = strings.TrimSuffix(deployApp.Name, "\r")
 	}
 
 	// Validate app name.
@@ -77,14 +77,14 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 		fmt.Printf("Source Image: ")
 		appSourceImage, _ := reader.ReadString('\n')
 		deployApp.Image = strings.TrimSuffix(appSourceImage, "\n")
-		deployApp.Image = strings.TrimSuffix(deployApp.Image, "\t")
+		deployApp.Image = strings.TrimSuffix(deployApp.Image, "\r")
 	}
 
 	if deployApp.Port == "" {
 		fmt.Printf("Port [8080]: ")
 		port, _ := reader.ReadString('\n')
 		deployApp.Port = strings.TrimSuffix(port, "\n")
-		deployApp.Port = strings.TrimSuffix(deployApp.Port, "\t")
+		deployApp.Port = strings.TrimSuffix(deployApp.Port, "\r")
 	}
 
 	if deployApp.Port != "" {
