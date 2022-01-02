@@ -61,6 +61,7 @@ func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 			fmt.Printf("Are you sure you want to delete app (y/n)? ")
 			deleteApp, _ = reader.ReadString('\n')
 			deleteApp = strings.TrimSuffix(deleteApp, "\n")
+			deleteApp = strings.TrimSuffix(deleteApp, "\r")
 
 			// If response is other than "y" or "n"
 			if deleteApp != "y" && deleteApp != "n" {
