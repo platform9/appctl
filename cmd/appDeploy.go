@@ -13,7 +13,7 @@ import (
 )
 
 var deploy_example = `
-  # Deploy an app using app-name and container image (public registory path)
+  # Deploy an app using app-name and container image (public registry path)
   # Assumes the container has a server that will listen on port 8080
   appctl deploy -n <appname> -i gcr.io/knative-samples/helloworld-go
   
