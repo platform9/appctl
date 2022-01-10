@@ -103,6 +103,7 @@ var (
 	MaxAppDeployLimit      = "Maximum apps deploy limit reached!!"
 	InvalidImage           = "Unable to fetch image"
 	MaxAppDeployLimitError = "Maximum apps deploy limit reached!!"
+	FailedToParseImage     = "Failed to parse image"
 )
 
 const (
