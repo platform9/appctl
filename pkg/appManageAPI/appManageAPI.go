@@ -213,7 +213,7 @@ func CreateApp(
 				//fmt.Printf("%v", errEvent)
 			}
 			s.Stop()
-			return fmt.Errorf("%v %v\n", invalidImage, image)
+			return fmt.Errorf("%v %v.\nCheck if application image path provided is valid/ is from a public registry.\n", invalidImage, image)
 		}
 		if !status {
 			// Wait until stauts of app deployed is ready and true.

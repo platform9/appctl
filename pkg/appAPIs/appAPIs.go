@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/platform9/appctl/pkg/constants"
@@ -119,14 +118,19 @@ func (cli_api *appAPI) CreateAppAPI(createInfo string, token string) ([]byte, er
 	if err != nil {
 		return nil, fmt.Errorf("Failed with error: %v", err)
 	}
-	errStatus := checkStatusCode(resp.StatusCode)
-	if errStatus != nil {
-		return nil, errStatus
-	}
-
 	defer resp.Body.Close()
 
-	return []byte(strconv.Itoa(resp.StatusCode)), nil
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read the data, error: %v", err)
+	}
+
+	errStatus := checkStatusCode(resp.StatusCode)
+	if errStatus != nil {
+		return data, errStatus
+	}
+
+	return data, nil
 }
 
 // To get all the apps information.
@@ -151,9 +155,10 @@ func CreateApp(name string, image string, env []string, port string, token strin
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
-	_, err := cli_api.CreateAppAPI(createInfo, token)
+	data, err := cli_api.CreateAppAPI(createInfo, token)
 	if err != nil {
-		return checkErrors(err)
+		errCombined := fmt.Errorf("%v: %v", err, string(data))
+		return checkErrors(errCombined)
 	}
 
 	return nil
@@ -436,6 +441,8 @@ func checkStatusCode(statusCode int) error {
 	case 500:
 		//Internal server error.
 		return fmt.Errorf("Backend server error.")
+	case 400:
+		return fmt.Errorf("Bad Request.")
 	default:
 		return nil
 	}
@@ -445,6 +452,9 @@ func checkStatusCode(statusCode int) error {
 func checkErrors(err error) error {
 	if checkServerDown(err) {
 		return fmt.Errorf("%v", constants.BackendServerDown)
+	}
+	if strings.Contains(err.Error(), constants.FailedToParseImage) {
+		return fmt.Errorf("%v. Please check the given application image registry path.", constants.FailedToParseImage)
 	}
 	return err
 }
