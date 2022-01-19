@@ -135,7 +135,7 @@ func CreateApp(
 	port string, // Port where application listens on.
 ) error {
 	if name == "" || image == "" {
-		return fmt.Errorf("Either or both of App name and Image not specified.\n")
+		return fmt.Errorf("Either or both of app name and image not specified.\n")
 	}
 
 	//Check Internet Connectivity
