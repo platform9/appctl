@@ -135,7 +135,7 @@ func CreateApp(
 	port string, // Port where application listens on.
 ) error {
 	if name == "" || image == "" {
-		return fmt.Errorf("Either or both of App Name and Image not specified.\n")
+		return fmt.Errorf("Either or both of app name and image not specified.\n")
 	}
 
 	//Check Internet Connectivity
@@ -279,7 +279,7 @@ func GetAppByNameInfo(
 	name string, // app name
 ) error {
 	if name == "" {
-		return fmt.Errorf("App Name not specified.\n")
+		return fmt.Errorf("App name not specified.\n")
 	}
 
 	//Check Internet Connectivity
@@ -463,7 +463,7 @@ func LoginApp() error {
 		//fmt.Printf("%v", errEvent)
 	}
 
-	fmt.Printf("\nSuccessfully Logged in!!\n")
+	fmt.Printf("\nSuccessfully logged in!!\n")
 
 	return nil
 }
@@ -473,7 +473,7 @@ func DeleteApp(
 	name string, // app name
 ) error {
 	if name == "" {
-		return fmt.Errorf("App Name not specified.\n")
+		return fmt.Errorf("App name not specified.\n")
 	}
 
 	//Check Internet Connectivity
