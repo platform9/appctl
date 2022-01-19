@@ -48,7 +48,7 @@ func init() {
 // To delete an app by its name.
 func appCmdDeleteRun(cmd *cobra.Command, args []string) {
 	if AppNameDelete == "" {
-		fmt.Printf("App Name not specified.\n")
+		fmt.Printf("App name not specified.\n")
 		return
 	}
 	// To ask user if to delete app when force delete is false.
