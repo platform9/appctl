@@ -35,13 +35,13 @@ func init() {
 func appCmdDescribeRun(cmd *cobra.Command, args []string) {
 	// Check if App name provided.
 	if AppName == "" {
-		fmt.Printf("App Name not specified.\n")
+		fmt.Printf("App name not specified.\n")
 		return
 	}
 
 	// Validate app name.
 	if !constants.RegexValidate(AppName, constants.ValidAppNameRegex) {
-		fmt.Printf("Invalid App name.\n")
+		fmt.Printf("Invalid app name.\n")
 		return
 	}
 
