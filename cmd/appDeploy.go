@@ -68,7 +68,7 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 
 	// Validate app name.
 	if !constants.RegexValidate(deployApp.Name, constants.ValidAppNameRegex) {
-		fmt.Printf("Invalid App name.\n")
+		fmt.Printf("Invalid app name.\n")
 		fmt.Printf("Name of the app to be deployed must contain a lowercase alphanumeric characters, '-' or '.'\nand must start with alphanumeric characters only.\n")
 		return
 	}
@@ -91,7 +91,7 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 		// Check if port given is valid i.e numeric only.
 		_, err := strconv.Atoi(deployApp.Port)
 		if err != nil {
-			fmt.Printf("Invalid Port. Please enter a valid port\n")
+			fmt.Printf("Invalid port. Please enter a valid port\n")
 			return
 		}
 	}
