@@ -97,7 +97,7 @@ func ListApps(token string) (map[string]interface{}, error) {
 
 	err = json.Unmarshal([]byte(list_apps), &listAppsInfo)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to Unmarshal with error: %s", err)
+		return nil, fmt.Errorf("Failed to unmarshal with error: %s", err)
 	}
 	return listAppsInfo, nil
 }
@@ -265,7 +265,7 @@ func GetDeviceCode() (*DeviceInfo, error) {
 
 	err = json.Unmarshal([]byte(deviceInfo), &getDeviceInfo)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to Unmarshal with error: %s", err)
+		return nil, fmt.Errorf("Failed to unmarshal with error: %s", err)
 	}
 	return &getDeviceInfo, nil
 }
@@ -313,7 +313,7 @@ func RequestToken(deviceCode string) (*TokenInfo, error) {
 
 	err = json.Unmarshal([]byte(tokenInfo), &getTokenInfo)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to Unmarshal with error: %s", err)
+		return nil, fmt.Errorf("Failed to unmarshal with error: %s", err)
 	}
 	return &getTokenInfo, nil
 }
@@ -442,7 +442,7 @@ func checkStatusCode(statusCode int) error {
 		//Internal server error.
 		return fmt.Errorf("Backend server error.")
 	case 400:
-		return fmt.Errorf("Bad Request.")
+		return fmt.Errorf("Bad request.")
 	default:
 		return nil
 	}
