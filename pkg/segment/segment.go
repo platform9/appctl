@@ -16,6 +16,7 @@ func SegmentClient() (analytics.Client, error) {
 	logger.SetOutput(io.Discard)
 	client, err := analytics.NewWithConfig(APPCTL_SEGMENT_WRITE_KEY, analytics.Config{
 		Logger: analytics.StdLogger(logger),
+		// TODO: Possibly have custom callbacks and redirect logs to some file
 	})
 	if err != nil {
 		return nil, err
