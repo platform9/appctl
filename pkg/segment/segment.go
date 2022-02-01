@@ -4,17 +4,30 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/url"
 
 	"github.com/platform9/appctl/pkg/constants"
 	"gopkg.in/segmentio/analytics-go.v3"
 )
+
+type CustomCallback struct {}
+
+func (c CustomCallback) Success(message analytics.Message)  {}
+
+func (c CustomCallback) Failure(message analytics.Message, err error)  {
+	if _, ok := err.(*url.Error); ok {
+		fmt.Printf("Unable to access segment.io - please unblock access if necessary.")
+	}
+}
 
 var APPCTL_SEGMENT_WRITE_KEY = "uDPDiaRE8jHI6NJKsQsXYWFyNGyw5iZj"
 
 func SegmentClient() (analytics.Client, error) {
 	logger := log.Default()
 	logger.SetOutput(io.Discard)
+	callback := &CustomCallback{}
 	client, err := analytics.NewWithConfig(APPCTL_SEGMENT_WRITE_KEY, analytics.Config{
+		Callback: callback,
 		Logger: analytics.StdLogger(logger),
 	})
 	if err != nil {
