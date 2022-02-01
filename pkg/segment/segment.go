@@ -5,30 +5,46 @@ import (
 	"io"
 	"log"
 	"net/url"
+	"reflect"
+	"sync/atomic"
 
 	"github.com/platform9/appctl/pkg/constants"
 	"gopkg.in/segmentio/analytics-go.v3"
 )
 
-type CustomCallback struct {}
-
-func (c CustomCallback) Success(message analytics.Message)  {}
-
-func (c CustomCallback) Failure(message analytics.Message, err error)  {
-	if _, ok := err.(*url.Error); ok {
-		fmt.Printf("Unable to access segment.io - please unblock access if necessary.")
-	}
-}
-
+var logger *log.Logger
+var callback *CustomCallback
 var APPCTL_SEGMENT_WRITE_KEY = "uDPDiaRE8jHI6NJKsQsXYWFyNGyw5iZj"
 
-func SegmentClient() (analytics.Client, error) {
-	logger := log.Default()
+func init() {
+	logger = log.Default()
 	logger.SetOutput(io.Discard)
-	callback := &CustomCallback{}
+	callback = &CustomCallback{}
+	callback.HasShownErr.Store(false)
+}
+
+type CustomCallback struct {
+	HasShownErr atomic.Value
+}
+
+func (c *CustomCallback) Success(message analytics.Message) {}
+
+func (c *CustomCallback) Failure(message analytics.Message, err error) {
+	v := c.HasShownErr.Load()
+	if reflect.ValueOf(v).Bool() {
+		return
+	}
+
+	if _, ok := err.(*url.Error); ok {
+		fmt.Println("Unable to access segment.io - please unblock access if necessary.")
+	}
+	c.HasShownErr.Store(true)
+}
+
+func SegmentClient() (analytics.Client, error) {
 	client, err := analytics.NewWithConfig(APPCTL_SEGMENT_WRITE_KEY, analytics.Config{
 		Callback: callback,
-		Logger: analytics.StdLogger(logger),
+		Logger:   analytics.StdLogger(logger),
 	})
 	if err != nil {
 		return nil, err
