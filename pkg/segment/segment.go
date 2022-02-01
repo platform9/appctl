@@ -2,6 +2,8 @@ package segment
 
 import (
 	"fmt"
+	"io"
+	"log"
 
 	"github.com/platform9/appctl/pkg/constants"
 	"gopkg.in/segmentio/analytics-go.v3"
@@ -10,7 +12,15 @@ import (
 var APPCTL_SEGMENT_WRITE_KEY = "***REMOVED***"
 
 func SegmentClient() (analytics.Client, error) {
-	client := analytics.New(APPCTL_SEGMENT_WRITE_KEY)
+	logger := log.Default()
+	logger.SetOutput(io.Discard)
+	client, err := analytics.NewWithConfig(APPCTL_SEGMENT_WRITE_KEY, analytics.Config{
+		Logger: analytics.StdLogger(logger),
+		// TODO: Possibly have custom callbacks and redirect logs to some file
+	})
+	if err != nil {
+		return nil, err
+	}
 	return client, nil
 }
 
