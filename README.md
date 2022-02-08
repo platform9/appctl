@@ -131,7 +131,7 @@ Once you have successfully logged in, you will now be able to use appctl to depl
 
 ### Version
 
-  **This command is used to get the current version of the CLI**
+  This command is used to get the current version of the CLI
 ```sh
 % ./appctl version
 
@@ -176,6 +176,7 @@ Flags:
   -p, --port string       The port where app server listens, set as '--port <port>'
 ```
 
+
 - **Example Deploy**
 ```sh
 % ./appctl deploy --app-name <name> --image <docker-image path>
@@ -184,9 +185,10 @@ Example:
 /appctl deploy --app-name hello --image gcr.io/knative-samples/helloworld-go
 ```
 
+
 - **Specifying Ports**
 
-If your application server listens on a specific port, then you can specify that while deploying the app using --port flag.
+If your application server listens on a specific port, then you can specify that while deploying the app using ```--port``` flag.
 
 ```sh 
 % ./appctl deploy --app-name <name> --image <docker-image path> --port <port-value>
@@ -194,6 +196,7 @@ If your application server listens on a specific port, then you can specify that
 Example:
 ./appctl deploy --app-name hello --image gcr.io/knative-samples/helloworld-go --port 7893
 ```
+
 
 - **Using Environment Variables**
 ```sh
@@ -203,7 +206,7 @@ Example:
 ./appctl deploy --app-name hello --image gcr.io/knative-samples/helloworld-go --env TARGET=appctler
 ```
 
-Appctl supports multiple --env variables
+Appctl supports multiple ```--env``` variables
 
 ```sh
 ./appctl deploy --app-name <name> --image <docker-image path> --env key1=value1 --env key2=value2
@@ -233,7 +236,7 @@ Flags:
 - **List Example**
 ```sh 
 ./appctl list
-NAME     URL      IMAGE     READY    CREATIONTIME    REASON
+NAME           URL                                                IMAGE                                       READY  CREATIONTIME  REASON
 cj-example  http://cj-example.cjones4s95lk.18.224.208.55.sslip.io  mcr.microsoft.com/dotnet/samples:aspnetapp  True  2021-12-21T21:52:58Z  nil
 ```
 
@@ -290,7 +293,7 @@ Flags:
 
 - **Delete Example**
 ```sh
-\% ./appctl delete -n asp
+% ./appctl delete -n asp
 Are you sure you want to delete app (y/n)? y
 Successfully deleted the app: cj-example
 ```
