@@ -1,5 +1,5 @@
 # appctl
-**Run apps, Not Clusters.** Deploy your app on kubernetes in seconds,with no clusters required. Check for more information at https://platform9.com/appctl/
+**Run apps, Not Clusters.** Deploy your app on kubernetes in seconds, with no clusters required. Check for more information at https://platform9.com/appctl/
 
 * Read the docs: [getting started with appctl](https://platform9.com/docs/appctl/getting-started)
 
@@ -54,7 +54,7 @@ Once the CLI is successfully downloaded, run the Login command to authenticate t
 Below are all supported commands for Appctl.
 
 ```sh
-#./appctl --help
+% ./appctl --help
 
 CLI to deploy & manage apps in Platform9 environment.
 Login first using $appctl login to use available commands.
@@ -81,7 +81,7 @@ Use "appctl [command] --help" for more information about a command.
 To appctl you must first login by running ```./appctl login```
 
 ```sh
-./appctl login --help
+% ./appctl login --help
 Login using Google account/Github account to use appctl
 
 Usage:
@@ -100,7 +100,7 @@ Flags:
 
 **Example Login**
 ```sh
-./appctl login
+% ./appctl login
 Starting login process.
 Device verification is required to continue login.
 Your Device Confirmation code is: TX2KW-BNPW6%
@@ -108,7 +108,7 @@ Your Device Confirmation code is: TX2KW-BNPW6%
 ✔ Successfully Logged in!!
 ```
 
-**Interactive login** The login command requires internet access and a web browser.
+**Interactive login:** The login command requires internet access and a web browser.
 
 Appctl login is a two step process:
 
@@ -133,7 +133,7 @@ Once you have successfully logged in, you will now be able to use appctl to depl
 
   **This command is used to get the current version of the CLI**
 ```sh
-#appctl version
+% ./appctl version
 
 appctl version: v1.1
 
@@ -146,7 +146,7 @@ To deploy an app, run ```./appctl deploy```
 The deploy command will deploy the specified container image using the provided name into Platform9 and automatically provision a public fully qualified domain with a unique port to access the application.
 
 ```sh
-./appctl deploy --help
+% ./appctl deploy --help
 Deploy an app
 
 Usage:
@@ -178,17 +178,18 @@ Flags:
 
 - **Example Deploy**
 ```sh
-./appctl deploy --app-name <name> --image <docker-image path>
+% ./appctl deploy --app-name <name> --image <docker-image path>
 
 Example:
 /appctl deploy --app-name hello --image gcr.io/knative-samples/helloworld-go
 ```
 
 - **Specifying Ports**
+
 If your application server listens on a specific port, then you can specify that while deploying the app using --port flag.
 
 ```sh 
-./appctl deploy --app-name <name> --image <docker-image path> --port <port-value>
+% ./appctl deploy --app-name <name> --image <docker-image path> --port <port-value>
 
 Example:
 ./appctl deploy --app-name hello --image gcr.io/knative-samples/helloworld-go --port 7893
@@ -196,7 +197,7 @@ Example:
 
 - **Using Environment Variables**
 ```sh
-./appctl deploy --app-name <name> --image <docker-image path> --env key1=value1
+% ./appctl deploy --app-name <name> --image <docker-image path> --env key1=value1
 
 Example:
 ./appctl deploy --app-name hello --image gcr.io/knative-samples/helloworld-go --env TARGET=appctler
@@ -206,4 +207,90 @@ Appctl supports multiple --env variables
 
 ```sh
 ./appctl deploy --app-name <name> --image <docker-image path> --env key1=value1 --env key2=value2
+```
+
+### List
+
+To list all the running apps.
+
+```sh
+% ./appctl list --help 
+Show all the running apps
+
+Usage:
+  appctl list [flags]
+
+Examples:
+
+  # Get all the apps deployed.
+  appctl list
+ 
+
+Flags:
+  -h, --help   help for list
+```
+
+- **List Example**
+```sh 
+./appctl list
+NAME     URL      IMAGE     READY    CREATIONTIME    REASON
+cj-example  http://cj-example.cjones4s95lk.18.224.208.55.sslip.io  mcr.microsoft.com/dotnet/samples:aspnetapp  True  2021-12-21T21:52:58Z  nil
+```
+
+### Describe
+
+Describe can be used to display the applications current state.
+
+```sh
+% ./appctl describe --help
+Provide detailed app information in json format
+
+Usage:
+  appctl describe [flags]
+
+Examples:
+
+  # Get detailed information about an app deployed through app-name in json format.
+  appctl describe -n <appname>
+ 
+
+Flags:
+  -n, --app-name string   Name of app to be described
+  -h, --help              help for describe
+```
+
+- **Describe Example**
+```sh
+% ./appctl describe -n cj-example
+```
+
+### Delete
+
+```sh
+% ./appctl delete --help
+Delete an existing app
+
+Usage:
+  appctl delete [flags]
+
+Examples:
+
+  # Delete an app using app-name.
+  appctl delete -n <appname>
+
+  # Force delete an app using app-name and force flag.
+  appctl delete -n <appname> -f
+ 
+
+Flags:
+  -n, --app-name string   Provide the name of app to be deleted
+  -f, --force             To force delete an app
+  -h, --help              help for delete
+```
+
+- **Delete Example**
+```sh
+\% ./appctl delete -n asp
+Are you sure you want to delete app (y/n)? y
+Successfully deleted the app: cj-example
 ```
