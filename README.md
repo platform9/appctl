@@ -51,21 +51,25 @@ Once the CLI is successfully downloaded, run the Login command to authenticate t
 
 
 ### Login 
-To appctl you must first login by running ./appctl login
+To appctl you must first login by running ```./appctl login```
 
 Appctl login is a two step process:
 
 1. Device Verification: First you must verify where appctl is being run.
 2. Login: Login using one of the supported federated identities (Google and Github).
 
-When you rung ```sh appctl login``` a browser window will automatically open and prompt for the device confirmation code.
+When you rung ```appctl login``` a browser window will automatically open and prompt for the device confirmation code.
 
 Confirm the device code displayed in the browser is identical to the code displayed by appctl, if it is correct click "Confirm" and the browser will redirected to _appctl log in _page.
 
 Appctl device confirmation
+
 ![appctl_device_confirmation](images/appctl_device_confirmation.png)
 
 Next, login using your **Google or Github account**
+
 ![login_using_google_github](images/Login_using_google_github_account.png)
 
 Once you have successfully logged in, you will now be able to use appctl to deploy applications.
+
+
