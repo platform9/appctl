@@ -62,7 +62,7 @@ When you rung ```appctl login``` a browser window will automatically open and pr
 
 Confirm the device code displayed in the browser is identical to the code displayed by appctl, if it is correct click "Confirm" and the browser will redirected to _appctl log in _page.
 
-Appctl device confirmation
+**Appctl device confirmation**
 
 ![appctl_device_confirmation](images/appctl_device_confirmation.png)
 
@@ -73,3 +73,36 @@ Next, login using your **Google or Github account**
 Once you have successfully logged in, you will now be able to use appctl to deploy applications.
 
 
+- **Help**
+```sh
+#./appctl --help
+
+CLI to deploy & manage apps in Platform9 environment.
+Login first using $appctl login to use available commands.
+
+Usage:
+  appctl [command]
+
+Available Commands:
+  delete      Delete an existing app
+  deploy      Deploy an app
+  describe    Provide detailed app information in json format
+  help        Help about any command
+  list        Show all the running apps
+  login       Login using Google account/Github account to use appctl
+  version     Current version of appctl CLI being used
+
+Flags:
+  -h, --help      help for appctl
+
+Use "appctl [command] --help" for more information about a command.
+```
+- **Version**
+
+  **This command is used to get the current version of the CLI**
+```sh
+#appctl version
+
+appctl version: v1.1
+
+```
