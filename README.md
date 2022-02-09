@@ -1,5 +1,5 @@
 # appctl
-**Run apps, Not Clusters.** Deploy your app on kubernetes in seconds, with no clusters required. Check for more information at https://platform9.com/appctl/
+**Run apps, Not Clusters.** Deploy apps on kubernetes in seconds, with no clusters required. Check for more information at https://platform9.com/appctl/
 
 * Read the docs: [getting started with appctl](https://platform9.com/docs/appctl/getting-started)
 
@@ -50,8 +50,8 @@ After successfull download give the executable permission to appctl.
 Once the CLI is successfully downloaded, run the Login command to authenticate to Platform9 and deploy applications.
 
 
-### Appctl all commands
-Below are all supported commands for Appctl.
+### Appctl Commands
+Below are supported commands for Appctl.
 
 ```sh
 % ./appctl --help
@@ -78,7 +78,7 @@ Use "appctl [command] --help" for more information about a command.
 ```
 
 ### Login 
-To appctl you must first login by running ```./appctl login```
+To appctl, first login by running ```./appctl login```
 
 ```sh
 % ./appctl login --help
@@ -112,10 +112,10 @@ Your Device Confirmation code is: TX2KW-BNPW6%
 
 Appctl login is a two step process:
 
-1. Device Verification: First you must verify where appctl is being run.
+1. Device Verification: First verify where appctl is being run.
 2. Login: Login using one of the supported federated identities (Google and Github).
 
-When you rung ```appctl login``` a browser window will automatically open and prompt for the device confirmation code.
+When the command ```appctl login``` is run, a browser window will automatically open and prompt for the device confirmation code.
 
 Confirm the device code displayed in the browser is identical to the code displayed by appctl, if it is correct click "Confirm" and the browser will redirected to _appctl log in _page.
 
@@ -123,11 +123,11 @@ Confirm the device code displayed in the browser is identical to the code displa
 
 ![appctl_device_confirmation](images/appctl_device_confirmation.png)
 
-Next, login using your **Google or Github account**
+Next, login using **Google or Github account**
 
 ![login_using_google_github](images/Login_using_google_github_account.png)
 
-Once you have successfully logged in, you will now be able to use appctl to deploy applications.
+Now on successful log in, appctl can be used to deploy applications.
 
 ### Version
 
@@ -188,7 +188,7 @@ Example:
 
 - **Specifying Ports**
 
-If your application server listens on a specific port, then you can specify that while deploying the app using ```--port``` flag.
+If application server listens on a specific port, then specify that while deploying the app using ```--port``` flag.
 
 ```sh 
 % ./appctl deploy --app-name <name> --image <docker-image path> --port <port-value>
