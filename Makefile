@@ -9,7 +9,19 @@ GITHASH := $(shell git rev-parse --short HEAD)
 BIN_DIR := $(shell pwd)/bin
 BIN := appctl
 REPO := appctl
-LDFLAGS := "" 
+
+PROD_APPCTL_SEGMENT_WRITE_KEY ?= YOUR_SEMENT_KEY
+PROD_APPURL ?= YOUR_FASTPATH_URI
+PROD_DOMAIN ?= AUTH0_DOMAIN
+PROD_CLIENTID ?= AUTH0_CLIENT_ID
+PROD_GRANT_TYPE ?= AUTH0_GRANT_TYPE
+SEGMENT_KEY := -X github.com/platform9/appctl/pkg/segment.APPCTL_SEGMENT_WRITE_KEY=$(PROD_APPCTL_SEGMENT_WRITE_KEY)
+APPURL := -X github.com/platform9/appctl/pkg/constants.APPURL=$(PROD_APPURL)
+DOMAIN := -X github.com/platform9/appctl/pkg/constants.DOMAIN=$(PROD_DOMAIN)
+CLIENTID := -X github.com/platform9/appctl/pkg/constants.CLIENTID=$(PROD_CLIENTID)
+GRANT_TYPE := -X github.com/platform9/appctl/pkg/constants.GrantType=$(PROD_GRANT_TYPE)
+
+PROD_LD_FLAGS := $(SEGMENT_KEY) $(APPURL) $(DOMAIN) $(CLIENTID) $(GRANT_TYPE)
 
 .PHONY: clean format test build-all build-linux64 build-win64 build-mac
 
@@ -24,15 +36,15 @@ clean:
 
 build-mac: $(BIN_DIR)/$(BIN)-mac
 $(BIN_DIR)/$(BIN)-mac: test
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-mac -ldflags $(LDFLAGS) main.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-mac -ldflags '$(PROD_LD_FLAGS)' main.go
 
 build-win64: $(BIN_DIR)/$(BIN)-win64
 $(BIN_DIR)/$(BIN)-win64: test
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-win64 -ldflags $(LDFLAGS) main.go
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-win64 -ldflags '$(PROD_LD_FLAGS)' main.go
 
 build-linux64: $(BIN_DIR)/$(BIN)-linux64
 $(BIN_DIR)/$(BIN)-linux64: test
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-linux64 -ldflags $(LDFLAGS) main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-linux64 -ldflags '$(PROD_LD_FLAGS)' main.go
 
 test:
 	go test -v ./...
