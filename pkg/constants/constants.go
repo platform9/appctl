@@ -111,6 +111,7 @@ const (
 	UTCClusterTimeStamp = "2006-01-02T15:04:05Z"
 )
 
+// Composing dependent variables
 func init() {
 	DEVICECODEURL = fmt.Sprintf("https://%s/oauth/device/code", DOMAIN)
 	DEVICEREQUESTPAYLOAD = fmt.Sprintf("client_id=%s&scope=%s", CLIENTID, GetAllScope())

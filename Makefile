@@ -9,12 +9,12 @@ GITHASH := $(shell git rev-parse --short HEAD)
 BIN_DIR := $(shell pwd)/bin
 BIN := appctl
 REPO := appctl
-
-PROD_APPCTL_SEGMENT_WRITE_KEY ?= YOUR_SEMENT_KEY
-PROD_APPURL ?= YOUR_FASTPATH_URI
-PROD_DOMAIN ?= AUTH0_DOMAIN
-PROD_CLIENTID ?= AUTH0_CLIENT_ID
-PROD_GRANT_TYPE ?= AUTH0_GRANT_TYPE
+# TODO: Assign these secrets
+# PROD_APPCTL_SEGMENT_WRITE_KEY ?=
+# PROD_APPURL ?=
+# PROD_DOMAIN ?=
+# PROD_CLIENTID ?=
+# PROD_GRANT_TYPE ?=
 SEGMENT_KEY := -X github.com/platform9/appctl/pkg/segment.APPCTL_SEGMENT_WRITE_KEY=$(PROD_APPCTL_SEGMENT_WRITE_KEY)
 APPURL := -X github.com/platform9/appctl/pkg/constants.APPURL=$(PROD_APPURL)
 DOMAIN := -X github.com/platform9/appctl/pkg/constants.DOMAIN=$(PROD_DOMAIN)
