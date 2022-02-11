@@ -131,6 +131,9 @@ func ListAppsInfo() error {
 func CreateApp(
 	name string, // App name to create.
 	image string, // Source Image to create app.
+	secret string, // Secret name in case of private container registry
+	username string, // User name in case of private container registry
+	password string, // Password in case of private container registry
 	env []string, // Environment varialbes of app.
 	port string, // Port where application listens on.
 ) error {
@@ -168,7 +171,7 @@ func CreateApp(
 	s.Start()
 	s.Suffix = " Deploying app.."
 
-	errCreate := appAPIs.CreateApp(name, image, env, port, config.IDToken)
+	errCreate := appAPIs.CreateApp(name, image, secret, username, password, env, port, config.IDToken)
 	if errCreate != nil {
 		//Event is Failure.
 		event.EventName = "Deploy-App"
