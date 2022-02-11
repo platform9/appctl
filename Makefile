@@ -16,7 +16,7 @@ DOMAIN := -X github.com/platform9/appctl/pkg/constants.DOMAIN=$(DOMAIN)
 CLIENTID := -X github.com/platform9/appctl/pkg/constants.CLIENTID=$(CLIENTID)
 GRANT_TYPE := -X github.com/platform9/appctl/pkg/constants.GrantType=$(GRANT_TYPE)
 
-PROD_LD_FLAGS := $(SEGMENT_KEY) $(APPURL) $(DOMAIN) $(CLIENTID) $(GRANT_TYPE)
+LD_FLAGS := $(SEGMENT_KEY) $(APPURL) $(DOMAIN) $(CLIENTID) $(GRANT_TYPE)
 
 .PHONY: clean format test build-all build-linux64 build-win64 build-mac
 
@@ -31,15 +31,15 @@ clean:
 
 build-mac: $(BIN_DIR)/$(BIN)-mac
 $(BIN_DIR)/$(BIN)-mac: test
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-mac -ldflags '$(PROD_LD_FLAGS)' main.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-mac -ldflags '$(LD_FLAGS)' main.go
 
 build-win64: $(BIN_DIR)/$(BIN)-win64
 $(BIN_DIR)/$(BIN)-win64: test
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-win64 -ldflags '$(PROD_LD_FLAGS)' main.go
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-win64 -ldflags '$(LD_FLAGS)' main.go
 
 build-linux64: $(BIN_DIR)/$(BIN)-linux64
 $(BIN_DIR)/$(BIN)-linux64: test
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-linux64 -ldflags '$(PROD_LD_FLAGS)' main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o $(BIN_DIR)/$(BIN)-linux64 -ldflags '$(LD_FLAGS)' main.go
 
 test:
 	go test -v ./...
