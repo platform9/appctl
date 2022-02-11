@@ -134,21 +134,22 @@ func (cli_api *appAPI) CreateAppAPI(createInfo string, token string) ([]byte, er
 }
 
 // To get all the apps information.
-func CreateApp(name string, image string, env []string, port string, token string) error {
+func CreateApp(name string, image string, secret string, username string, password string,
+		env []string, port string, token string) error {
 	// Endpoint to list apps.
 	url := fmt.Sprintf(constants.APPURL)
 	var createInfo string
 	if env != nil {
 		if port != "" {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "port": "%s", "envs": %v}`, name, image, port, GenEnvSlice(env))
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "secretname":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, secret, username, password, port, GenEnvSlice(env))
 		} else {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "envs": %v}`, name, image, GenEnvSlice(env))
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "secretname":"%s", "username":"%s", "password":"%s", "envs": %v}`, name, image, secret, username, password, GenEnvSlice(env))
 		}
 	} else {
 		if port != "" {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "port": "%s"}`, name, image, port)
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "secretname":"%s", "username":"%s", "password":"%s", "port": "%s"}`, name, image, secret, username, password, port)
 		} else {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s"}`, name, image)
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "secretname":"%s", "username":"%s", "password":"%s"}`, name, image, secret, username, password)
 		}
 	}
 
