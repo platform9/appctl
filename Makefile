@@ -10,11 +10,11 @@ BIN_DIR := $(shell pwd)/bin
 BIN := appctl
 REPO := appctl
 
-SEGMENT_KEY := -X github.com/platform9/appctl/pkg/segment.APPCTL_SEGMENT_WRITE_KEY=$(PROD_APPCTL_SEGMENT_WRITE_KEY)
-APPURL := -X github.com/platform9/appctl/pkg/constants.APPURL=$(PROD_APPURL)
-DOMAIN := -X github.com/platform9/appctl/pkg/constants.DOMAIN=$(PROD_DOMAIN)
-CLIENTID := -X github.com/platform9/appctl/pkg/constants.CLIENTID=$(PROD_CLIENTID)
-GRANT_TYPE := -X github.com/platform9/appctl/pkg/constants.GrantType=$(PROD_GRANT_TYPE)
+SEGMENT_KEY := -X github.com/platform9/appctl/pkg/segment.APPCTL_SEGMENT_WRITE_KEY=$(APPCTL_SEGMENT_WRITE_KEY)
+APPURL := -X github.com/platform9/appctl/pkg/constants.APPURL=$(APPURL)
+DOMAIN := -X github.com/platform9/appctl/pkg/constants.DOMAIN=$(DOMAIN)
+CLIENTID := -X github.com/platform9/appctl/pkg/constants.CLIENTID=$(CLIENTID)
+GRANT_TYPE := -X github.com/platform9/appctl/pkg/constants.GrantType=$(GRANT_TYPE)
 
 PROD_LD_FLAGS := $(SEGMENT_KEY) $(APPURL) $(DOMAIN) $(CLIENTID) $(GRANT_TYPE)
 
