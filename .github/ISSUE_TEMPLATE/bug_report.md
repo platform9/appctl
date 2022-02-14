@@ -2,30 +2,29 @@
 name: Bug report
 about: Create a report to help us improve
 title: ''
-labels: ''
-assignees: ''
-
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+### Describe the bug
+<!-- A clear and concise description of what the bug is. -->
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+### Steps to reproduce the problem
+<!-- How can a maintainer reproduce this issue (please be detailed) -->
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+### Expected behavior
+<!--A clear and concise description of what you expected to happen. -->
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+### Screenshots
+<!--If applicable, add screenshots to help explain your problem. -->
 
-**Desktop (please complete the following information):**
- - OS: [e.g. MacOS, Windows, Linux]
- - Version [e.g. 18.04]
+### appctl version
+<!--Please specify the appctl version being used-->
 
-**Additional context**
-Add any other context about the problem here.
+### Desktop 
+- OS:
+- Version: 
+
+ <!-- OS: [e.g. MacOS, Windows, Linux]
+ - Version [e.g. 18.04]-->
+
+### Additional context
+<!--Add any other context about the problem here.-->
