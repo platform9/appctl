@@ -2,19 +2,26 @@
 name: Feature request
 about: Suggest an idea for this project
 title: ''
-labels: ''
-assignees: ''
-
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+### Feature request
+<!--A clear and concise description of what the feature is. Ex. I'm expecting the appctl to work [...]-->
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+### Usecase
+<!--A clear and concise description of usecase you've considered, appctl to support.-->
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+### Describe the solution expecting
+<!--A clear and concise description of what you want to happen.-->
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+### Additional context
+<!--Add any other context or screenshots about the feature request here.-->
+
+
+<!--Optional Classifications:
+- kind : issue
+- kind : proposal
+- kind : doc
+- kind : cleanup-->
+
+
+
