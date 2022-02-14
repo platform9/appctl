@@ -3,7 +3,7 @@
 # Usage:
 # make                 # builds the artifacts
 # make clean           # removes the artifact and the vendored packages
-
+include .env
 SHELL := /usr/bin/env bash
 GITHASH := $(shell git rev-parse --short HEAD)
 BIN_DIR := $(shell pwd)/bin
