@@ -8,7 +8,6 @@ import (
 
 // API Variables.
 var (
-	//APPURL               = "http://127.0.0.1:6112/v1/apps"
 	APPURL               = "http://fastpath.appctl.net:6112/v1/apps"
 	TABLEFORMAT          = "NAME | URL | IMAGE | READY | CREATIONTIME | REASON"
 	DOMAIN               = "appctl.us.auth0.com"
