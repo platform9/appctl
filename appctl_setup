@@ -2,86 +2,48 @@
 
 set -o pipefail
 
-start_time=$(date +"%s")
-
-assert() {
-    if [ $# -gt 0 ]; then stdout_log "ASSERT: ${1}"; fi
-    if [[ -f ${log_file} ]]; then
-        echo -e "\n\n"
-	echo ""
-	echo -e "${RED}Installation failed, Here are the last 10 lines from the log${NC}"
-	echo "The full installation log is available at ${log_file}"
-	echo "If more information is needed re-run the install with --debug"
-	echo "$(tail ${log_file})"
-    else
-	echo "Installation failed prior to log file being created"
-	echo "Try re-running with --debug"
-	echo "Installation instructions: https://platform9.com/docs/appctl/getting-started"
-    fi
-    exit 1
-}
-
-debugging() {
-
-	output="$(date +"%T"):$(basename $0) : ${1}"
-
-    if [ -f "${log_file}" ]; then
-	echo "${output}" 2>&1 >> ${log_file}
-    fi
-    echo "${output}"
-}
-
-stdout_log() {
-    echo "$1"
-    debugging "$1"
-}
-
 initialize_basedir() {
-    debugging "Initializing: ${pf9_basedir}"
+    echo -e "${YELLOW}Initializing: ${pf9_basedir}${NC}"
     for dir in ${pf9_state_dirs}; do
-	debugging "Ensuring ${dir} exists"
-        if ! mkdir -p "${dir}" > /dev/null 2>&1; then assert "Failed to create directory: ${dir}"; fi
+	echo -e "${YELLOW}Ensuring ${dir} exists${NC}"
+        if ! mkdir -p "${dir}" > /dev/null 2>&1; then echo -e "${RED}Failed to create directory: ${dir}${NC}"; fi
     done
-    debugging "Ensuring ${log_file} exists"
-    if ! mkdir -p "${dir}" > /dev/null 2>&1; then assert "Failed to create directory: ${dir}"; fi
-    if ! touch "${log_file}" > /dev/null 2>&1; then assert "failed to create log file: ${log_file}"; fi
 }
 
 refresh_symlink() {
     # Create symlink in /usr/bin
-    
     if [ -L ${symlink_path} ]; then
-	if ! (sudo rm ${symlink_path} >> ${log_file} 2>&1); then
-		assert "Failed to remove existing symlink: ${symlink_path}"; fi
+	if ! (sudo rm ${symlink_path} 2>&1); then
+		echo -e "${RED}Failed to remove existing symlink: ${symlink_path}${NC}"; fi
 	fi
-    if ! (sudo ln -s ${cli_exec} ${symlink_path} >> ${log_file} 2>&1); then
-	    assert "Failed to create Platform9 CLI symlink in /usr/bin"; fi
+    if ! (sudo ln -s ${cli_exec} ${symlink_path} 2>&1); then
+	    echo -e "${RED}Failed to create Platform9 CLI symlink in /usr/bin${NC}"; fi
 }
 
 check_installation() {
-    if ! (${cli_exec} --help >> ${log_file} 2>&1); then
-	assert "Installation of Platform9 Appctl CLI Failed"; fi
+    if ! (${cli_exec} --help 2>&1); then
+	echo -e "${RED}Installation of Platform9 Appctl CLI Failed.${NC}"; fi
 }
 
 download_cli_binary() {
-	echo "Note: SUDO access required to run Platform9 Appctl CLI."
+    echo "Note: SUDO access required to install Platform9 Appctl CLI."
     echo "      You might be prompted for your SUDO password."
 	echo ""
 	echo "Downloading Platform9 Appctl CLI binary..."
 	sudo rm ${cli_exec} 2> /dev/null
-	cd ${pf9_bin} > /dev/null && sudo curl -s -O ${cli_path} -o ${log_file} 2>&1 && cd - > /dev/null
+	cd ${pf9_bin} > /dev/null && sudo curl -s -O ${cli_path} 2>&1 && cd - > /dev/null
 	sudo chmod 555 ${cli_exec}
 	echo ""
-	echo "Platform9 Appctl CLI binary downloaded."
+	echo -e "${GREEN}Platform9 Appctl CLI binary downloaded.${NC}"
 	echo ""
 }
 
 download_cli_binary_windows(){
     echo "Downloading Platform9 Appctl CLI binary..."
-    curl -s -O ${cli_path} -o appctl.log
+    curl -s -O ${cli_path}
     Ren "appctl" "appctl.exe"
     echo ""
-	echo "Platform9 Appctl CLI binary downloaded."
+	echo -e "${GREEN}Platform9 Appctl CLI binary downloaded.${NC}"
 	echo ""
 }
 
@@ -128,37 +90,33 @@ set_os_cpu(){
 
 symlink_path="/usr/bin/appctl"
 pf9_basedir=$(dirname ~/pf9/.)
-log_file=${pf9_basedir}/log/cli_install.log
 pf9_bin=${pf9_basedir}/bin
-pf9_state_dirs="${pf9_bin} ${pf9_basedir}/log"
+pf9_state_dirs="${pf9_bin}"
 set_os_cpu
 cli_path="https://pmkft-assets.s3-us-west-1.amazonaws.com/appctl/${os}/appctl"
 cli_exec="${pf9_bin}/appctl"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
 NC='\033[0m' 
 
 print_pf9_logo
+echo ""
+echo ""
 initialize_basedir
 
 if [[ ${os} == "win"* ]]; then
     download_cli_binary_windows
-    echo "Installing Platform9 CLI..."
     echo ""
 else
     download_cli_binary
-    echo "Installing Platform9 CLI..."
+    echo "Installing Platform9 Appctl CLI..."
     echo ""
     refresh_symlink
     check_installation
 fi
+echo ""
+echo -e "${GREEN}Platform9 Appctl CLI installation completed successfully !${NC}"
 
 
-debugging "Platform9 CLI installation completed successfully."
-echo -e "${GREEN}Platform9 CLI installation completed successfully !${NC}"
-echo ""
-echo "To deploy and manage apps in Platform9 environment."
-echo "Login first using 'appctl login' to use available commands."
-echo "        appctl help"
-echo ""
