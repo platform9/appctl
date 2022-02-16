@@ -103,6 +103,7 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 	}
 
 	var isPrivateReg bool = true
+
 	if deployApp.userName == "" && deployApp.password == "" {
 		fmt.Printf("Is the image from a private registry (Y/n)? [n]: ")
 		readerChar := bufio.NewReader(os.Stdin)
