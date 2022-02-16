@@ -113,7 +113,7 @@ func ListAppsInfo() error {
 		Output = append(Output, appinfo)
 	}
 
-	//Event is successfull.
+	//Event is successful.
 	event.EventName = "List-Apps"
 	event.Status = "Success"
 	errEvent := Send(event, nil)
@@ -193,7 +193,7 @@ func CreateApp(
 	time.Sleep(constants.APPDEPLOYINTERVAL * time.Second)
 	// Polling to fetch URL if app is deployed.
 	var count = 0
-	var status = false
+	var status, securedAppURL bool
 	var invalidImage string
 	for count <= constants.APPDEPLOYINTERVAL {
 		count++
@@ -227,9 +227,17 @@ func CreateApp(
 		// URL Endpoint where the app service is available.
 		url := (get_app["status"]).(map[string]interface{})["url"]
 		if url != nil && status {
+
+			// Check if app url is secured.
+			securedAppURL = checkSecuredURL(url)
+			if !securedAppURL {
+				time.Sleep(constants.SECUREENDPOINT * time.Second)
+				continue
+			}
+
 			s.Stop()
 			fmt.Printf("\nApp %v is deployed and can be accessed at URL: %v\n", name, url)
-			//Event is Successfull.
+			//Event is Successful.
 			event.EventName = "Deploy-App"
 			event.Status = "Success"
 			errEvent := Send(event, get_app)
@@ -244,7 +252,7 @@ func CreateApp(
 			return nil
 		}
 	}
-	if !status {
+	if !status || !securedAppURL {
 		s.Stop()
 		fmt.Printf("\nApp deploy taking time. Check latest status by running command `appctl list`.\n")
 	}
@@ -762,4 +770,10 @@ func getResponseMessage(conditions interface{}) string {
 		return fmt.Sprintf("%v  %v", readyReason, readyMessage)
 	}
 	return "nil"
+}
+
+// Check if app url is secured.
+func checkSecuredURL(url interface{}) bool {
+	urlString := fmt.Sprintf("%v", url)
+	return strings.Contains(urlString, constants.HTTPS)
 }

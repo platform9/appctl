@@ -61,8 +61,14 @@ const (
 	// Token poll interval
 	TOKENPOLLINTERVAL = 5
 
+	// Fetch secure app endpoint.
+	SECUREENDPOINT = 2
+
 	// Maximum app deployed status code.
 	MaxAppDeployStatusCode = "429"
+
+	// HTTPS string
+	HTTPS = "https"
 )
 
 //Configfile
