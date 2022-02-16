@@ -31,7 +31,11 @@ var deployExample = `
   	  appctl deploy -n <appname> -i <aws_account_id>.dkr.ecr.<region>.amazonaws.com/<image>:<tag> -u AWS -P <Password obtained from AWS CLI>
 
   	  # Sample command to deploy an app from a GCR private registry path
+<<<<<<< HEAD
   	  appctl deploy -n <appname> -i gcr.io/<GCP_projectID>/<image> -u oauth2accesstoken -P <Token obtained from gcloud CLI>
+=======
+  	  appctl deploy -n <appname> -i gcr.io/<GCP_projectID>/<image> -u <oauth2_accesstoken> -P <Token obtained from gcloud CLI>
+>>>>>>> a062d88 (Added sample example commands, removed few semi-colons)
 
 
   # Deploy an app using app-name and container image, and pass environment variables.
