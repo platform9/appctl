@@ -12,8 +12,8 @@ import (
 
 // Type definition for struct encapsulating app manager APIs.
 type appAPI struct {
-	Client  *http.Client
-	BaseURL string
+	client  *http.Client
+	baseURL string
 }
 
 //Environmnet variable struct.
@@ -53,9 +53,9 @@ var (
 )
 
 // API to list/get all apps.
-func (cli_api *appAPI) ListAppsAPI(token string) ([]byte, error) {
+func (cli_api *appAPI) listAppsAPI(token string) ([]byte, error) {
 
-	req, err := http.NewRequest("GET", cli_api.BaseURL, nil)
+	req, err := http.NewRequest("GET", cli_api.baseURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Http request failed with error: %v", err)
 	}
@@ -63,7 +63,7 @@ func (cli_api *appAPI) ListAppsAPI(token string) ([]byte, error) {
 	idToken := fmt.Sprintf("Bearer %s", token)
 	req.Header.Add("Authorization", idToken)
 
-	resp, err := cli_api.Client.Do(req)
+	resp, err := cli_api.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed with error: %v", err)
 	}
@@ -90,7 +90,7 @@ func ListApps(token string) (map[string]interface{}, error) {
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
-	list_apps, err := cli_api.ListAppsAPI(token)
+	list_apps, err := cli_api.listAppsAPI(token)
 	if err != nil {
 		return nil, checkErrors(err)
 	}
@@ -103,9 +103,9 @@ func ListApps(token string) (map[string]interface{}, error) {
 }
 
 // API to list/get all apps.
-func (cli_api *appAPI) CreateAppAPI(createInfo string, token string) ([]byte, error) {
+func (cli_api *appAPI) createAppAPI(createInfo string, token string) ([]byte, error) {
 	payload := strings.NewReader(fmt.Sprintf("%s", createInfo))
-	req, err := http.NewRequest("POST", cli_api.BaseURL, payload)
+	req, err := http.NewRequest("POST", cli_api.baseURL, payload)
 	if err != nil {
 		return nil, fmt.Errorf("Http request failed with error: %v", err)
 	}
@@ -114,7 +114,7 @@ func (cli_api *appAPI) CreateAppAPI(createInfo string, token string) ([]byte, er
 	req.Header.Add("Authorization", idToken)
 
 	req.Header.Add("Content-Type", "application/json")
-	resp, err := cli_api.Client.Do(req)
+	resp, err := cli_api.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed with error: %v", err)
 	}
@@ -141,9 +141,9 @@ func CreateApp(name string, image string, username string, password string,
 	var createInfo string
 	if env != nil {
 		if port != "" {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, username, password, port, GenEnvSlice(env))
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, username, password, port, genEnvSlice(env))
 		} else {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "envs": %v}`, name, image, username, password, GenEnvSlice(env))
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "envs": %v}`, name, image, username, password, genEnvSlice(env))
 		}
 	} else {
 		if port != "" {
@@ -156,7 +156,7 @@ func CreateApp(name string, image string, username string, password string,
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
-	data, err := cli_api.CreateAppAPI(createInfo, token)
+	data, err := cli_api.createAppAPI(createInfo, token)
 	if err != nil {
 		errCombined := fmt.Errorf("%v: %v", err, string(data))
 		return checkErrors(errCombined)
@@ -166,9 +166,9 @@ func CreateApp(name string, image string, username string, password string,
 }
 
 // API to get a particular app by name.
-func (cli_api *appAPI) GetAppByNameAPI(token string) ([]byte, error) {
+func (cli_api *appAPI) getAppByNameAPI(token string) ([]byte, error) {
 
-	req, err := http.NewRequest("GET", cli_api.BaseURL, nil)
+	req, err := http.NewRequest("GET", cli_api.baseURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Http request failed with error: %v", err)
 	}
@@ -176,7 +176,7 @@ func (cli_api *appAPI) GetAppByNameAPI(token string) ([]byte, error) {
 	idToken := fmt.Sprintf("Bearer %s", token)
 	req.Header.Add("Authorization", idToken)
 
-	resp, err := cli_api.Client.Do(req)
+	resp, err := cli_api.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Request processing failed with error: %v", err)
 	}
@@ -203,7 +203,7 @@ func GetAppByName(appName string, token string) (map[string]interface{}, error) 
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
-	get_app, err := cli_api.GetAppByNameAPI(token)
+	get_app, err := cli_api.getAppByNameAPI(token)
 	if err != nil {
 		//To handle case where backend server is down, but app exists.
 		if checkServerDown(err) {
@@ -226,10 +226,10 @@ func GetAppByName(appName string, token string) (map[string]interface{}, error) 
 }
 
 // To get device code for login.
-func (cli_api *appAPI) GetDeviceCodeAPI(getDevice string) ([]byte, error) {
+func (cli_api *appAPI) getDeviceCodeAPI(getDevice string) ([]byte, error) {
 
 	payload := strings.NewReader(getDevice)
-	req, err := http.NewRequest("POST", cli_api.BaseURL, payload)
+	req, err := http.NewRequest("POST", cli_api.baseURL, payload)
 	if err != nil {
 		return nil, fmt.Errorf("Http request failed with error: %v", err)
 	}
@@ -259,7 +259,7 @@ func GetDeviceCode() (*DeviceInfo, error) {
 
 	cli_api := appAPI{client, url}
 
-	deviceInfo, err := cli_api.GetDeviceCodeAPI(deviceRequest)
+	deviceInfo, err := cli_api.getDeviceCodeAPI(deviceRequest)
 	if err != nil {
 		return &DeviceInfo{}, checkErrors(err)
 	}
@@ -272,11 +272,11 @@ func GetDeviceCode() (*DeviceInfo, error) {
 }
 
 // To request token after successful device verification.
-func (cli_api *appAPI) RequestTokenAPI(requestToken string) ([]byte, error) {
+func (cli_api *appAPI) requestTokenAPI(requestToken string) ([]byte, error) {
 
 	payload := strings.NewReader(requestToken)
 
-	req, err := http.NewRequest("POST", cli_api.BaseURL, payload)
+	req, err := http.NewRequest("POST", cli_api.baseURL, payload)
 	if err != nil {
 		return nil, fmt.Errorf("Http request failed with error: %v", err)
 	}
@@ -307,7 +307,7 @@ func RequestToken(deviceCode string) (*TokenInfo, error) {
 
 	cli_api := appAPI{client, url}
 
-	tokenInfo, err := cli_api.RequestTokenAPI(deviceRequest)
+	tokenInfo, err := cli_api.requestTokenAPI(deviceRequest)
 	if err != nil {
 		return nil, checkErrors(err)
 	}
@@ -320,9 +320,9 @@ func RequestToken(deviceCode string) (*TokenInfo, error) {
 }
 
 // API to delete a particular app by name.
-func (cli_api *appAPI) DeleteAppByNameAPI(token string) ([]byte, error) {
+func (cli_api *appAPI) deleteAppByNameAPI(token string) ([]byte, error) {
 
-	req, err := http.NewRequest("DELETE", cli_api.BaseURL, nil)
+	req, err := http.NewRequest("DELETE", cli_api.baseURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Http request failed with error: %v", err)
 	}
@@ -330,7 +330,7 @@ func (cli_api *appAPI) DeleteAppByNameAPI(token string) ([]byte, error) {
 	idToken := fmt.Sprintf("Bearer %s", token)
 	req.Header.Add("Authorization", idToken)
 
-	resp, err := cli_api.Client.Do(req)
+	resp, err := cli_api.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed with error: %v", err)
 	}
@@ -357,7 +357,7 @@ func DeleteAppByName(appName string, token string) error {
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
-	_, err := cli_api.DeleteAppByNameAPI(token)
+	_, err := cli_api.deleteAppByNameAPI(token)
 	if err != nil {
 		return checkErrors(err)
 	}
@@ -366,8 +366,8 @@ func DeleteAppByName(appName string, token string) error {
 }
 
 // Login API
-func (cli_api *appAPI) LoginAPI(token string) ([]byte, error) {
-	req, err := http.NewRequest("POST", cli_api.BaseURL, nil)
+func (cli_api *appAPI) loginAPI(token string) ([]byte, error) {
+	req, err := http.NewRequest("POST", cli_api.baseURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Http request failed with error: %v", err)
 	}
@@ -377,7 +377,7 @@ func (cli_api *appAPI) LoginAPI(token string) ([]byte, error) {
 
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := cli_api.Client.Do(req)
+	resp, err := cli_api.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed with error: %v", err)
 	}
@@ -404,7 +404,7 @@ func Login(token string) error {
 	client := &http.Client{}
 
 	cli_api := appAPI{client, url}
-	_, err := cli_api.LoginAPI(token)
+	_, err := cli_api.loginAPI(token)
 	if err != nil {
 		return checkErrors(err)
 	}
@@ -412,7 +412,7 @@ func Login(token string) error {
 }
 
 // Generate environemnt slice as per create command. [{ "key":"ENV1", "value":"val1"}, { "key":"ENV2", "value":"val2"}]
-func GenEnvSlice(env []string) []string {
+func genEnvSlice(env []string) []string {
 	var envSlice []string
 
 	if env != nil {

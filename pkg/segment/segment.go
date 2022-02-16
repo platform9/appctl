@@ -27,8 +27,6 @@ func SegmentClient() (analytics.Client, error) {
 func SendGroupTraits(c analytics.Client, id string, data map[string]interface{}) error {
 	userID := fmt.Sprintf("appctl-%s", id)
 
-	//fmt.Printf("Sending group traits to segment with groupID: %s, userID: %s", id, userID)
-
 	if err := c.Enqueue(analytics.Group{
 		UserId:  userID,
 		GroupId: id,
@@ -68,10 +66,9 @@ func SendEvent(c analytics.Client, name string, id string, status string, loginT
 	}
 	return nil
 }
+
 func SendEventList(c analytics.Client, name string, id string, status string, loginType string, errMessage string, data interface{}) error {
 	userID := fmt.Sprintf("appctl-%s", id)
-	// Should be as a log message.
-	//fmt.Printf("Sending event to segment with title: %s, userID: %s\n", name, userID)
 	if err := c.Enqueue(analytics.Track{
 		UserId: userID,
 		Event:  name,
