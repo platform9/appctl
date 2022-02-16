@@ -11,6 +11,7 @@ require (
 	github.com/ryanuber/columnize v2.1.2+incompatible
 	github.com/spf13/cobra v1.2.1
 	go.uber.org/zap v1.19.1
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	gopkg.in/segmentio/analytics-go.v3 v3.1.0
 )
 
