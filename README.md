@@ -143,7 +143,7 @@ appctl version: v1.1
 
 To deploy an app, run ```./appctl deploy```
 
-The deploy command will deploy the specified container image using the provided name into Platform9 and automatically provision a public fully qualified domain with a unique port to access the application.
+The deploy command will deploy the specified container image using the provided name into Platform9 and automatically provision a fully qualified domain with a unique port to access the application.
 
 ```sh
 % ./appctl deploy --help
@@ -158,6 +158,10 @@ Examples:
   # Assumes the container has a server that will listen on port 8080
   appctl deploy -n <appname> -i gcr.io/knative-samples/helloworld-go
   
+  # Deploy an app using app-name and container image (private registry path)
+  # Assumes the container has a server that will listen on port 8080
+  appctl deploy -n <appname> -i <private registry image path> -u <container registry username> -P <container registry password>
+
   # Deploy an app using app-name and container image, and pass environment variables.
   # Assumes the container has a server that will listen on port 8080
   appctl deploy -n <appname> -i <image> -e key1=value1 -e key2=value2
@@ -173,7 +177,9 @@ Flags:
   -e, --env stringArray   Environment variable to set, as key=value pair
   -h, --help              help for deploy
   -i, --image string      Container image of the app (public registry path)
+  -P, --password string   Password of private container registry
   -p, --port string       The port where app server listens, set as '--port <port>'
+  -u, --username string   Username of private container registry 
 ```
 
 

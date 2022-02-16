@@ -131,7 +131,6 @@ func ListAppsInfo() error {
 func CreateApp(
 	name string, // App name to create.
 	image string, // Source Image to create app.
-	secret string, // Secret name in case of private container registry
 	username string, // User name in case of private container registry
 	password string, // Password in case of private container registry
 	env []string, // Environment varialbes of app.
@@ -171,7 +170,7 @@ func CreateApp(
 	s.Start()
 	s.Suffix = " Deploying app.."
 
-	errCreate := appAPIs.CreateApp(name, image, secret, username, password, env, port, config.IDToken)
+	errCreate := appAPIs.CreateApp(name, image, username, password, env, port, config.IDToken)
 	if errCreate != nil {
 		//Event is Failure.
 		event.EventName = "Deploy-App"
@@ -216,7 +215,7 @@ func CreateApp(
 				//fmt.Printf("%v", errEvent)
 			}
 			s.Stop()
-			return fmt.Errorf("%v %v.\nPlease check if application image path provided is valid, and is from a public registry.\n", invalidImage, image)
+			return fmt.Errorf("%v %v.\nPlease check if the application image path provided is valid, and is from a public registry.\n", invalidImage, image)
 		}
 		if !status {
 			// Wait until stauts of app deployed is ready and true.
