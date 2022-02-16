@@ -179,7 +179,7 @@ Flags:
   -i, --image string      Container image of the app (public registry path)
   -P, --password string   Password of private container registry
   -p, --port string       The port where app server listens, set as '--port <port>'
-  -u, --username string   Username of private container registry 
+  -u, --username string   Username of private container registry
 ```
 
 
