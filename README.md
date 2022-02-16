@@ -317,6 +317,7 @@ Clone the repository on your system, and navigate to the cloned repository `cd a
 ```sh
 # optional, used for telemetry
 APPCTL_SEGMENT_WRITE_KEY := <YOUR_SEGMENT_WRITE_KEY>
+# For setting up fast-path locally, visit: https://github.com/platform9/fast-path
 APPURL := <YOUR_FAST_PATH_URI>
 # prebuilt binary uses auth0 for authentication
 DOMAIN := <IDENTITY_PROVIDER DOMAIN>
@@ -325,6 +326,8 @@ CLIENTID := <YOUR_CLIENT_ID>
 # prebuilt binary uses grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code
 GRANT_TYPE := <GRANT_TYPE>
 ```
+`appctl` can be configured to work with a local or a hosted `fast-path` service installation. For more details on setting up `fast-path` locally, check the GitHub repository [here](https://github.com/platform9/fast-path).
+
 Depending on your platform, run the appropriate target:
 - Linux
 

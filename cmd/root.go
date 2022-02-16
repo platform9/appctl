@@ -5,8 +5,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var verbosity bool
-
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use: "appctl",
