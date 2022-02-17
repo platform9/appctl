@@ -55,21 +55,12 @@ var (
 )
 
 type App struct {
-<<<<<<< HEAD
 	name     string
 	image    string
 	env      []string
 	port     string
 	userName string
 	password string
-=======
-	Name     string
-	Image    string
-	Env      []string
-	Port     string
-	Username string
-	Password string
->>>>>>> 45b527d (Added sample example commands, removed few semi-colons)
 }
 
 // command variables
@@ -112,11 +103,7 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 	}
 
 	var isPrivateReg bool = true
-<<<<<<< HEAD
 	if deployApp.userName == "" && deployApp.password == "" {
-=======
-	if deployApp.Username == "" && deployApp.Password == "" {
->>>>>>> 45b527d (Added sample example commands, removed few semi-colons)
 		fmt.Printf("Is the image from a private registry (Y/n)? [n]: ")
 		readerChar := bufio.NewReader(os.Stdin)
 		char, _, _ := readerChar.ReadRune()
@@ -139,11 +126,7 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 
 	//App to be deployed from private registry. Check if required options are provided
 	if isPrivateReg {
-<<<<<<< HEAD
 		if deployApp.userName != "" && deployApp.password != "" {
-=======
-		if deployApp.Username != "" && deployApp.Password != "" {
->>>>>>> 45b527d (Added sample example commands, removed few semi-colons)
 			//Continue in this case
 		} else {
 			//incorrect options specified. Either both or none of the Username and Password should be specified.
