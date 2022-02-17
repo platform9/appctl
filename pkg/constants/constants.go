@@ -113,6 +113,6 @@ var (
 )
 
 const (
-	CLIVersion          = "appctl version: v1.1"
+	CLIVersion          = "appctl version: v1.2"
 	UTCClusterTimeStamp = "2006-01-02T15:04:05Z"
 )
