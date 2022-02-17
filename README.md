@@ -313,7 +313,12 @@ Successfully deleted the app: cj-example
 - [`golang 1.17 or later`](https://go.dev/dl/)
 
 ## Building
-Clone the repository on your system, and navigate to the cloned repository `cd appctl`. Download the dependencies using `go mod download`. Before building, ensure following environment variables are set either by following the instructions in `.env.dev` or by setting them as environment variables.
+Clone the repository, navigate to the cloned repository and download the dependencies using `go mod download`. Before building, ensure following environment variables are set either by following the instructions in `.env.dev` or by setting them as environment variables.
+1. APPCTL_SEGMENT_WRITE_KEY (optional)
+1. APPURL
+1. DOMAIN
+1. CLIENTID
+1. GRANT_TYPE
 ```sh
 # optional, used for telemetry
 APPCTL_SEGMENT_WRITE_KEY := <YOUR_SEGMENT_WRITE_KEY>
@@ -328,7 +333,7 @@ GRANT_TYPE := <GRANT_TYPE>
 ```
 `appctl` can be configured to work with a local or a hosted `fast-path` service installation. For more details on setting up `fast-path` locally, check the GitHub repository [here](https://github.com/platform9/fast-path).
 
-Depending on your platform, run the appropriate target:
+Run the appropriate `make` target:
 - Linux
 
   ```sh
