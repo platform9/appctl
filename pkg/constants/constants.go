@@ -9,7 +9,7 @@ import (
 // API Variables.
 var (
 	APPURL               = "http://fastpath.appctl.net:6112/v1/apps"
-	TABLEFORMAT          = "NAME | URL | IMAGE | READY | CREATIONTIME | REASON"
+	TABLEFORMAT          = "NAME | URL | IMAGE | READY | AGE | REASON"
 	DOMAIN               = "appctl.us.auth0.com"
 	DEVICECODEURL        = "https://" + DOMAIN + "/oauth/device/code"
 	CLIENTID             = "37cBgJP3K2yiYq2gamzEv1sH7vN2x6Z1"
