@@ -22,7 +22,17 @@ var deploy_example = `
   # Deploy an app using app-name and container image (private registry path)
   # Assumes the container has a server that will listen on port 8080
   appctl deploy -n <appname> -i <private registry image path> -u <container registry username> -P <container registry password>
-  
+
+  	  # Sample command to deploy an app from a docker private registry path
+  	  appctl deploy -n <appname> -i docker.io/<username>/<image>:<tag> -u <Docker username> -P <Docker password>
+
+  	  # Sample command to deploy an app from an AWS ECR private registry path
+  	  appctl deploy -n <appname> -i <aws_account_id>.dkr.ecr.<region>.amazonaws.com/<image>:<tag> -u AWS -P <Password obtained from AWS CLI>
+
+  	  # Sample command to deploy an app from a GCR private registry path
+  	  appctl deploy -n <appname> -i gcr.io/<GCP_projectID>/<image> -u oauth2accesstoken -P <Token obtained from gcloud CLI>
+
+
   # Deploy an app using app-name and container image, and pass environment variables.
   # Assumes the container has a server that will listen on port 8080
   appctl deploy -n <appname> -i <image> -e key1=value1 -e key2=value2
@@ -44,10 +54,10 @@ var (
 )
 
 type App struct {
-	Name  string
-	Image string
-	Env   []string
-	Port  string
+	Name     string
+	Image    string
+	Env      []string
+	Port     string
 	Username string
 	Password string
 }
@@ -90,7 +100,7 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 		deployApp.Image = strings.TrimSuffix(deployApp.Image, "\r")
 	}
 
-	var isPrivateReg bool = true;
+	var isPrivateReg bool = true
 	if deployApp.Username == "" && deployApp.Password == "" {
 		fmt.Printf("Is the image from a private registry (Y/n)? [n]: ")
 		readerChar := bufio.NewReader(os.Stdin)
@@ -108,12 +118,12 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 			deployApp.Password = strings.TrimSuffix(appSourcePassword, "\n")
 			deployApp.Password = strings.TrimSuffix(deployApp.Password, "\r")
 		} else {
-			isPrivateReg = false;
+			isPrivateReg = false
 		}
 	}
 
 	//App to be deployed from private registry. Check if required options are provided
-	if (isPrivateReg) {
+	if isPrivateReg {
 		if deployApp.Username != "" && deployApp.Password != "" {
 			//Continue in this case
 		} else {
