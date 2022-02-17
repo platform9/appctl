@@ -320,9 +320,9 @@ APPCTL_SEGMENT_WRITE_KEY := <YOUR_SEGMENT_WRITE_KEY>
 # For setting up fast-path locally, visit: https://github.com/platform9/fast-path
 APPURL := <YOUR_FAST_PATH_URI>
 # prebuilt binary uses auth0 for authentication
-DOMAIN := <IDENTITY_PROVIDER DOMAIN>
+DOMAIN := <YOUR_AUTH0_APPLICATION_DOMAIN>
 # auth0 tenant id
-CLIENTID := <YOUR_CLIENT_ID>
+CLIENTID := <YOUR_AUTH0_CLIENT_ID>
 # prebuilt binary uses grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code
 GRANT_TYPE := <GRANT_TYPE>
 ```
