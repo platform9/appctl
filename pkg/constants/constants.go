@@ -9,7 +9,7 @@ import (
 // API Variables.
 var (
 	APPURL               = "***REMOVED***"
-	TABLEFORMAT          = "NAME | URL | IMAGE | READY | CREATIONTIME | REASON"
+	TABLEFORMAT          = "NAME | URL | IMAGE | READY | AGE | REASON"
 	DOMAIN               = "***REMOVED***"
 	DEVICECODEURL        = "https://" + DOMAIN + "/oauth/device/code"
 	CLIENTID             = "***REMOVED***"

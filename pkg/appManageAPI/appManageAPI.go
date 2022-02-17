@@ -78,7 +78,7 @@ func ListAppsInfo() error {
 			if key == "metadata" && appInfo != nil {
 				list.Name = fmt.Sprintf("%v", appInfo.(map[string]interface{})["name"])
 				creationTime := fmt.Sprintf("%v", appInfo.(map[string]interface{})["creationTimestamp"])
-				list.CreationTime = appCreationTime(creationTime)
+				list.CreationTime = appAge(creationTime)
 			}
 			// Fetch the Image name.
 			if key == "spec" && appInfo != nil {
@@ -742,8 +742,8 @@ func getPort(container map[string]interface{}) string {
 	return ""
 }
 
-//App creation time to hours convertion.
-func appCreationTime(appCreationTime string) string {
+//appAge gives the age of app since its creation.
+func appAge(appCreationTime string) string {
 	appCreatedTimeParsed, err := time.Parse(constants.UTCClusterTimeStamp, appCreationTime)
 	if err != nil {
 		// If can't parse then return same UTC time stamp.
