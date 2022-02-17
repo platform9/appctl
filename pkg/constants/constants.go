@@ -8,14 +8,15 @@ import (
 
 // API Variables.
 var (
-	APPURL               = "http://fastpath.appctl.net:6112/v1/apps"
-	TABLEFORMAT          = "NAME | URL | IMAGE | READY | CREATIONTIME | REASON"
-	DOMAIN               = "appctl.us.auth0.com"
-	DEVICECODEURL        = "https://" + DOMAIN + "/oauth/device/code"
-	CLIENTID             = "37cBgJP3K2yiYq2gamzEv1sH7vN2x6Z1"
-	DEVICEREQUESTPAYLOAD = "client_id=" + CLIENTID + "&scope=" + GetAllScope()
+	APPURL        string
+	TABLEFORMAT   = "NAME | URL | IMAGE | READY | CREATIONTIME | REASON"
+	DOMAIN        string
+	CLIENTID      string
+	DEVICECODEURL string
+
+	DEVICEREQUESTPAYLOAD string
 	// Grant type is urlencoded
-	GrantType = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code"
+	GrantType string
 )
 
 type ListAppInfo struct {
@@ -116,3 +117,10 @@ const (
 	CLIVersion          = "appctl version: v1.2"
 	UTCClusterTimeStamp = "2006-01-02T15:04:05Z"
 )
+
+// Composing dependent variables
+func init() {
+	DEVICECODEURL = fmt.Sprintf("https://%s/oauth/device/code", DOMAIN)
+	DEVICEREQUESTPAYLOAD = fmt.Sprintf("client_id=%s&scope=%s", CLIENTID, GetAllScope())
+
+}
