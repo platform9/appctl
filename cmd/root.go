@@ -23,14 +23,25 @@ func ensureAppSecrets(cmd *cobra.Command, args []string) {
 	if cmd.Name() == "help" || cmd.Name() == "version" {
 		return
 	}
-	if constants.APPURL == "" || constants.DOMAIN == "" ||
-		constants.CLIENTID == "" || constants.GrantType == "" {
+	requiredSecrets := map[string]string{
+		"APPURL":     constants.APPURL,
+		"DOMAIN":     constants.DOMAIN,
+		"CLIENTID":   constants.CLIENTID,
+		"GRANT_TYPE": constants.GrantType,
+	}
+	missing := ""
+	for secret, val := range requiredSecrets {
+		if val == "" {
+			missing = fmt.Sprintf("%s%s\n", missing, secret)
+		}
+	}
+	if missing != "" {
 		fmt.Println(color.Red("appctl secrets not set.\n",
-			"Please ensure all of APPURL, DOMAIN, CLIENTID, GRANT_TYPE and APPCTL_SEGMENT_WRITE_KEY are set during the build.",
+			"Please ensure the following values are set:\n",
+			missing,
 		))
 		os.Exit(1)
 	}
-
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
