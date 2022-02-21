@@ -314,14 +314,12 @@ Successfully deleted the app: cj-example
 
 ## Building
 Clone the repository, navigate to the cloned repository and download the dependencies using `go mod download`. Before building, ensure following environment variables are set either by following the instructions in `.env.dev` or by setting them as environment variables.
-1. APPCTL_SEGMENT_WRITE_KEY (optional)
 1. APPURL
 1. DOMAIN
 1. CLIENTID
 1. GRANT_TYPE
+1. APPCTL_SEGMENT_WRITE_KEY (optional)
 ```sh
-# optional, used for telemetry
-APPCTL_SEGMENT_WRITE_KEY := <YOUR_SEGMENT_WRITE_KEY>
 # For setting up fast-path locally, visit: https://github.com/platform9/fast-path
 APPURL := <YOUR_FAST_PATH_URI>
 # prebuilt binary uses auth0 for authentication
@@ -330,6 +328,8 @@ DOMAIN := <YOUR_AUTH0_APPLICATION_DOMAIN>
 CLIENTID := <YOUR_AUTH0_CLIENT_ID>
 # prebuilt binary uses grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code
 GRANT_TYPE := <GRANT_TYPE>
+# optional, used for telemetry
+APPCTL_SEGMENT_WRITE_KEY := <YOUR_SEGMENT_WRITE_KEY>
 ```
 `appctl` can be configured to work with a local or a hosted `fast-path` service installation. For more details on setting up `fast-path` locally, check the GitHub repository [here](https://github.com/platform9/fast-path).
 
