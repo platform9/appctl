@@ -326,7 +326,7 @@ APPCTL_SEGMENT_WRITE_KEY := <YOUR_SEGMENT_WRITE_KEY>
 APPURL := <YOUR_FAST_PATH_URI>
 # prebuilt binary uses auth0 for authentication
 DOMAIN := <YOUR_AUTH0_APPLICATION_DOMAIN>
-# auth0 tenant id
+# auth0 client id
 CLIENTID := <YOUR_AUTH0_CLIENT_ID>
 # prebuilt binary uses grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code
 GRANT_TYPE := <GRANT_TYPE>
