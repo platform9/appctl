@@ -18,7 +18,14 @@ LD_FLAGS := $(SEGMENT_KEY) $(APPURL) $(DOMAIN) $(CLIENTID) $(GRANT_TYPE)
 
 .PHONY: clean format test build-all build-linux64 build-win64 build-mac
 
-	@@ -24,15 +31,15 @@ clean:
+build-all: build-linux64 build-win64 build-mac
+
+format:
+	gofmt -w -s *.go
+	gofmt -w -s */*.go
+
+clean:
+	rm -rf $(BIN_DIR)
 
 build-mac: $(BIN_DIR)/$(BIN)-mac
 $(BIN_DIR)/$(BIN)-mac: test
