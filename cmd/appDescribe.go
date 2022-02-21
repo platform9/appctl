@@ -8,7 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var describe_example = `
+// usage example
+var describeExample = `
   # Get detailed information about an app deployed through app-name in json format.
   appctl describe -n <appname>
  `
@@ -18,34 +19,35 @@ var (
 	appCmdDescribe = &cobra.Command{
 		Use:     "describe",
 		Short:   "Provide detailed app information in json format",
-		Example: describe_example,
+		Example: describeExample,
 		Long:    `Provide detailed app information in json format`,
 		Run:     appCmdDescribeRun,
 	}
 )
 
-var AppName string
+// command variables
+var appNameDescribe string
 
 func init() {
 	rootCmd.AddCommand(appCmdDescribe)
-	appCmdDescribe.Flags().StringVarP(&AppName, "app-name", "n", "", "Name of app to be described")
+	appCmdDescribe.Flags().StringVarP(&appNameDescribe, "app-name", "n", "", "Name of app to be described")
 }
 
 // To get app information by its name
 func appCmdDescribeRun(cmd *cobra.Command, args []string) {
 	// Check if App name provided.
-	if AppName == "" {
+	if appNameDescribe == "" {
 		fmt.Printf("App name not specified.\n")
 		return
 	}
 
 	// Validate app name.
-	if !constants.RegexValidate(AppName, constants.ValidAppNameRegex) {
+	if !constants.RegexValidate(appNameDescribe, constants.ValidAppNameRegex) {
 		fmt.Printf("Invalid app name.\n")
 		return
 	}
 
-	errapi := appManageAPI.GetAppByNameInfo(AppName)
+	errapi := appManageAPI.GetAppByNameInfo(appNameDescribe)
 	if errapi != nil {
 		fmt.Printf("%v", errapi)
 	}

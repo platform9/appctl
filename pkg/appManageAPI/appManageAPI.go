@@ -19,7 +19,7 @@ import (
 )
 
 // Config structure for configfile.
-type CONFIG struct {
+type Config struct {
 	IDToken   string
 	ExpiresAt time.Time
 }
@@ -40,7 +40,7 @@ func ListAppsInfo() error {
 	}
 
 	// Load config, and check if id_token expired
-	config, err := LoadConfig()
+	config, err := loadConfig()
 	if err != nil {
 		return fmt.Errorf("Failed to list apps. Please login using command `appctl login`.\n")
 	}
@@ -64,11 +64,7 @@ func ListAppsInfo() error {
 		event.EventName = "List-Apps"
 		event.Status = "Failure"
 		event.Error = err.Error()
-		errEvent := Send(event, nil)
-		if errEvent != nil {
-			//Should add as log message
-			//fmt.Printf("%v", errEvent)
-		}
+		send(event, nil)
 		return fmt.Errorf("Failed to list apps with error: %v\n", err)
 	}
 
@@ -78,7 +74,7 @@ func ListAppsInfo() error {
 			if key == "metadata" && appInfo != nil {
 				list.Name = fmt.Sprintf("%v", appInfo.(map[string]interface{})["name"])
 				creationTime := fmt.Sprintf("%v", appInfo.(map[string]interface{})["creationTimestamp"])
-				list.CreationTime = appCreationTime(creationTime)
+				list.CreationTime = appAge(creationTime)
 			}
 			// Fetch the Image name.
 			if key == "spec" && appInfo != nil {
@@ -116,12 +112,7 @@ func ListAppsInfo() error {
 	//Event is successful.
 	event.EventName = "List-Apps"
 	event.Status = "Success"
-	errEvent := Send(event, nil)
-	if errEvent != nil {
-		//Should add as log message
-		//fmt.Printf("%v", errEvent)
-	}
-
+	send(event, nil)
 	tabularAppInfo := columnize.SimpleFormat(Output)
 	fmt.Println(tabularAppInfo)
 	return nil
@@ -146,7 +137,7 @@ func CreateApp(
 	}
 
 	// Load config, and check if id_token expired
-	config, err := LoadConfig()
+	config, err := loadConfig()
 	if err != nil {
 		return fmt.Errorf("Failed to deploy app. Please login using command `appctl login`.\n")
 	}
@@ -176,11 +167,7 @@ func CreateApp(
 		event.EventName = "Deploy-App"
 		event.Status = "Failure"
 		event.Error = errCreate.Error()
-		errEvent := Send(event, nil)
-		if errEvent != nil {
-			//Should add as log message
-			//fmt.Printf("%v", errEvent)
-		}
+		send(event, nil)
 		s.Stop()
 		if errCreate.Error() == constants.MaxAppDeployLimitError {
 			return fmt.Errorf("%v\n", errCreate.Error())
@@ -209,11 +196,7 @@ func CreateApp(
 			event.EventName = "Deploy-App"
 			event.Status = "Failure"
 			event.Error = invalidImage
-			errEvent := Send(event, get_app)
-			if errEvent != nil {
-				//Should add as log message
-				//fmt.Printf("%v", errEvent)
-			}
+			send(event, get_app)
 			s.Stop()
 			return fmt.Errorf("%v %v.\nPlease check if the application image path provided is valid, and is from a public registry.\n", invalidImage, image)
 		}
@@ -239,11 +222,7 @@ func CreateApp(
 			//Event is Successful.
 			event.EventName = "Deploy-App"
 			event.Status = "Success"
-			errEvent := Send(event, get_app)
-			if errEvent != nil {
-				// Should add as log message
-				//fmt.Printf("%v", errEvent)
-			}
+			send(event, get_app)
 			return nil
 		} else {
 			s.Stop()
@@ -298,7 +277,7 @@ func GetAppByNameInfo(
 	}
 
 	// Load config, and check if id_token expired
-	config, err := LoadConfig()
+	config, err := loadConfig()
 	if err != nil {
 		return fmt.Errorf("Failed to get app information. Please login using command `appctl login`.\n")
 	}
@@ -320,23 +299,17 @@ func GetAppByNameInfo(
 		event.EventName = "Describe-App"
 		event.Status = "Failure"
 		event.Error = err.Error()
-		errEvent := Send(event, get_app)
-		if errEvent != nil {
-			//Should add as log message
-			//fmt.Printf("%v", errEvent)
-		}
+		send(event, get_app)
 		return fmt.Errorf("Failed to get app information with error: %v\nCheck 'appctl list' for more information on apps running.\n", err)
 	}
 
 	event.EventName = "Describe-App"
 	event.Status = "Success"
-	errEvent := Send(event, get_app)
-	if errEvent != nil {
-		// Should add as log message
-		//fmt.Printf("%v", errEvent)
-	}
-
+	send(event, get_app)
 	jsonFormatted, err := json.MarshalIndent(get_app, "", "  ")
+	if err != nil {
+		return err
+	}
 	fmt.Printf("%v\n", string(jsonFormatted))
 	return nil
 }
@@ -402,11 +375,7 @@ func LoginApp() error {
 			event.EventName = "Login"
 			event.Status = "Failure"
 			event.Error = Token.Error
-			errEvent := Send(event, nil)
-			if errEvent != nil {
-				//Should add as log message
-				//fmt.Printf("%v", errEvent)
-			}
+			send(event, nil)
 			return fmt.Errorf("\nThe device code was expired as the app was not authorized in time!\n" +
 				"Login again using `appctl login`!!\n")
 		}
@@ -418,63 +387,41 @@ func LoginApp() error {
 			event.EventName = "Login"
 			event.Status = "Failure"
 			event.Error = Token.Error
-			errEvent := Send(event, nil)
-			if errEvent != nil {
-				//Should add as log message
-				//fmt.Printf("%v", errEvent)
-			}
+			send(event, nil)
 			return fmt.Errorf("\nCannot login. Please try again.\n")
 		}
 	}
 	// To create and write to config file.
-	var config = CONFIG{
+	var config = Config{
 		IDToken:   Token.IdToken,
 		ExpiresAt: time.Now().Add(time.Duration(Token.ExpiresIn) * time.Second),
 	}
 
-	errConfig := CreateConfig(config)
+	errConfig := createConfig(config)
 	if errConfig != nil {
 		//Event is Failure.
 		event.EventName = "Login"
 		event.Status = "Failure"
 		event.Error = errConfig.Error()
-		errEvent := Send(event, nil)
-		if errEvent != nil {
-			//Should add as log message
-			//fmt.Printf("%v", errEvent)
-		}
+		send(event, nil)
 		return fmt.Errorf("Cannot login. Please try again.\n")
 	}
 	// Send info to fast-path api.
 	errLogin := appAPIs.Login(config.IDToken)
 	if errLogin != nil {
-		err := RemoveConfig()
-		if err != nil {
-			//Should add in log message.
-			//fmt.Printf("Failed to remove config")
-		}
+		removeConfig()
 		//Event is Failure.
 		event.EventName = "Login"
 		event.Status = "Failure"
 		event.Error = errLogin.Error()
-		errEvent := Send(event, nil)
-		if errEvent != nil {
-			//Should add as log message
-			//fmt.Printf("%v", errEvent)
-		}
+		send(event, nil)
 		return fmt.Errorf("\nCannot login!! Backend server is down. Please try later.\n")
 	}
 
 	event.EventName = "Login"
 	event.Status = "Success"
-	errEvent := Send(event, nil)
-	if errEvent != nil {
-		// Should add as log message
-		//fmt.Printf("%v", errEvent)
-	}
-
+	send(event, nil)
 	fmt.Printf("\nSuccessfully logged in!!\n")
-
 	return nil
 }
 
@@ -492,7 +439,7 @@ func DeleteApp(
 	}
 
 	// Load config, and check if id_token expired
-	config, err := LoadConfig()
+	config, err := loadConfig()
 	if err != nil {
 		return fmt.Errorf("Failed to delete app. Please login using command `appctl login`.\n")
 	}
@@ -512,7 +459,7 @@ func DeleteApp(
 	}
 	// Fetch app info prior to deletion.
 	var event Event
-	appInfo, _ := FetchAppInfo(get_app)
+	appInfo, _ := fetchAppInfo(get_app)
 	event.Data = append(event.Data, *appInfo)
 
 	// Fetch the detailedapp information for given appname.
@@ -522,29 +469,20 @@ func DeleteApp(
 		event.EventName = "Delete-App"
 		event.Status = "Failure"
 		event.Error = errDel.Error()
-		errEvent := Send(event, nil)
-		if errEvent != nil {
-			//Should add as log message
-			//fmt.Printf("%v", errEvent)
-		}
+		send(event, nil)
 		return fmt.Errorf("Failed to delete app with error: %v\nCheck 'appctl list' for more information on apps running.\n", errDel)
 	}
 
 	// Send Segment Event
 	event.EventName = "Delete-App"
 	event.Status = "Success"
-	errEvent := Send(event, nil)
-	if errEvent != nil {
-		// Should add as log message
-		//fmt.Printf("%v", errEvent)
-	}
-
+	send(event, nil)
 	return nil
 }
 
-func CreateConfig(config CONFIG) error {
+func createConfig(config Config) error {
 	//Create the pf9 config directory to store configfile
-	err := CreateDirectoryIfNotExist()
+	err := createDirectoryIfNotExist()
 	if err != nil {
 		return fmt.Errorf("Failed to create config directory!!")
 	}
@@ -560,7 +498,7 @@ func CreateConfig(config CONFIG) error {
 	return nil
 }
 
-func CreateDirectoryIfNotExist() error {
+func createDirectoryIfNotExist() error {
 	// Create a pf9 directory
 	var err error
 	if _, err := os.Stat(constants.CONFIGDIR); os.IsNotExist(err) {
@@ -571,19 +509,19 @@ func CreateDirectoryIfNotExist() error {
 	return err
 }
 
-func LoadConfig() (*CONFIG, error) {
+func loadConfig() (*Config, error) {
 	config, _ := ioutil.ReadFile(constants.CONFIGFILEPATH)
 
-	readConfig := CONFIG{}
+	readConfig := Config{}
 
 	err := json.Unmarshal([]byte(config), &readConfig)
 	if err != nil {
-		return &CONFIG{}, fmt.Errorf("Failed to parse config with error: %s", err)
+		return &Config{}, fmt.Errorf("Failed to parse config with error: %s", err)
 	}
 	return &readConfig, nil
 }
 
-func RemoveConfig() error {
+func removeConfig() error {
 	err := os.Remove(constants.CONFIGFILEPATH)
 	if err != nil {
 		return fmt.Errorf("Failed to remove config file")
@@ -592,7 +530,7 @@ func RemoveConfig() error {
 }
 
 // To send a segment event.
-func Send(event Event, get_app map[string]interface{}) error {
+func send(event Event, get_app map[string]interface{}) error {
 	// Create a new Segment client
 	client, err := segment.SegmentClient()
 	if err != nil {
@@ -603,7 +541,7 @@ func Send(event Event, get_app map[string]interface{}) error {
 
 	// Segment event for List Apps
 	if event.EventName == "List-Apps" || event.EventName == "Login" {
-		userId, loginType, _ := FetchUserId()
+		userId, loginType, _ := fetchUserId()
 		if err := segment.SendEventList(client, event.EventName, userId, event.Status, loginType, event.Error, event.Data); err != nil {
 			return fmt.Errorf("Failed to send segment event. Error: %v\n", err)
 		}
@@ -611,11 +549,11 @@ func Send(event Event, get_app map[string]interface{}) error {
 	} else {
 		//Segment events for Deploy, describe, delete app.
 		if get_app != nil {
-			appInfo, _ := FetchAppInfo(get_app)
+			appInfo, _ := fetchAppInfo(get_app)
 			event.Data = append(event.Data, *appInfo)
 		}
 		// Fetch the UserID and loginType
-		userId, loginType, _ := FetchUserId()
+		userId, loginType, _ := fetchUserId()
 		if err := segment.SendEvent(client, event.EventName, userId, event.Status, loginType, event.Error, event.Data); err != nil {
 			return fmt.Errorf("Failed to send segment event. Error: %v\n", err)
 		}
@@ -625,10 +563,10 @@ func Send(event Event, get_app map[string]interface{}) error {
 }
 
 // To fetch UserID, and login type after basic validation of token.
-func FetchUserId() (string, string, error) {
+func fetchUserId() (string, string, error) {
 
 	// Load config, and fetch the IDToken
-	config, err := LoadConfig()
+	config, err := loadConfig()
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to load config. Please login using command `appctl login`.\n")
 	}
@@ -653,7 +591,7 @@ func FetchUserId() (string, string, error) {
 }
 
 // To fetch App Info.
-func FetchAppInfo(get_app map[string]interface{}) (*constants.ListAppInfo, error) {
+func fetchAppInfo(get_app map[string]interface{}) (*constants.ListAppInfo, error) {
 	// Fetch AppName, URL, Image, ReadyStatus, Creation Time from app information.
 	var name, creationTime, url, image, readyStatus, port, reason string
 
@@ -690,7 +628,7 @@ func FetchAppInfo(get_app map[string]interface{}) (*constants.ListAppInfo, error
 		}
 	}
 
-	return &constants.ListAppInfo{name, url, image, port, readyStatus, creationTime, reason}, nil
+	return &constants.ListAppInfo{Name: name, URL: url, Image: image, Port: port, ReadyStatus: readyStatus, CreationTime: creationTime, Reason: reason}, nil
 }
 
 // Basic token validation, and get claims.
@@ -742,8 +680,8 @@ func getPort(container map[string]interface{}) string {
 	return ""
 }
 
-//App creation time to hours convertion.
-func appCreationTime(appCreationTime string) string {
+//appAge gives the age of app since its creation.
+func appAge(appCreationTime string) string {
 	appCreatedTimeParsed, err := time.Parse(constants.UTCClusterTimeStamp, appCreationTime)
 	if err != nil {
 		// If can't parse then return same UTC time stamp.
