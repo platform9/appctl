@@ -7,7 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var list_example = `
+// usage example
+var listExample = `
   # Get all the apps deployed.
   appctl list
  `
@@ -17,7 +18,7 @@ var (
 	appCmdList = &cobra.Command{
 		Use:     "list",
 		Short:   "Show all the running apps",
-		Example: list_example,
+		Example: listExample,
 		Long:    `Show all the running apps`,
 		Run:     appCmdListRun,
 	}

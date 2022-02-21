@@ -6,18 +6,6 @@ import (
 	"regexp"
 )
 
-// API Variables.
-var (
-	APPURL               = "***REMOVED***"
-	TABLEFORMAT          = "NAME | URL | IMAGE | READY | AGE | REASON"
-	DOMAIN               = "***REMOVED***"
-	DEVICECODEURL        = "https://" + DOMAIN + "/oauth/device/code"
-	CLIENTID             = "***REMOVED***"
-	DEVICEREQUESTPAYLOAD = "client_id=" + CLIENTID + "&scope=" + GetAllScope()
-	// Grant type is urlencoded
-	GrantType = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code"
-)
-
 type ListAppInfo struct {
 	Name         string
 	URL          string
@@ -28,8 +16,40 @@ type ListAppInfo struct {
 	Reason       string
 }
 
-// Available SCOPES for auth0 access.
-var AllScopes = []string{
+const (
+	// Time to wait to get app deployed.
+	APPDEPLOYINTERVAL = 5
+
+	// Token poll interval
+	TOKENPOLLINTERVAL = 5
+
+	// Fetch secure app endpoint.
+	SECUREENDPOINT = 2
+
+	// Maximum app deployed status code.
+	MaxAppDeployStatusCode = "429"
+
+	// HTTPS string
+	HTTPS = "https"
+
+	CLIVersion          = "appctl version: v1.2"
+	UTCClusterTimeStamp = "2006-01-02T15:04:05Z"
+)
+
+// API Variables.
+var (
+	APPURL               = "***REMOVED***"
+	TABLEFORMAT          = "NAME | URL | IMAGE | READY | AGE | REASON"
+	DOMAIN               = "***REMOVED***"
+	DEVICECODEURL        = "https://" + DOMAIN + "/oauth/device/code"
+	CLIENTID             = "***REMOVED***"
+	DEVICEREQUESTPAYLOAD = "client_id=" + CLIENTID + "&scope=" + getAllScope()
+	// Grant type is urlencoded
+	GrantType = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code"
+)
+
+// Available SCOPES for auth0 access
+var allScopes = []string{
 	"openid",
 	"profile",
 	"email",
@@ -51,27 +71,10 @@ var AllScopes = []string{
 	"read:prompts", "update:prompts",
 }
 
-// Only required scopes for IDToken generation.
-var RequiredScopes = AllScopes[:4]
+// Only required scopes for IDToken generation
+var requiredScopes = allScopes[:4]
 
-const (
-	// Time to wait to get app deployed.
-	APPDEPLOYINTERVAL = 5
-
-	// Token poll interval
-	TOKENPOLLINTERVAL = 5
-
-	// Fetch secure app endpoint.
-	SECUREENDPOINT = 2
-
-	// Maximum app deployed status code.
-	MaxAppDeployStatusCode = "429"
-
-	// HTTPS string
-	HTTPS = "https"
-)
-
-//Configfile
+// Config directory
 var (
 	HOMEDIR, _ = os.UserHomeDir()
 	//Config Dir for pf9
@@ -80,26 +83,13 @@ var (
 	CONFIGFILEPATH = CONFIGDIR + "/" + CONFIGFILE
 )
 
-func GetAllScope() string {
-	var scope string
-	for _, val := range RequiredScopes {
-		scope += val + " "
-	}
-	return (scope)
-}
-
+// Regex for valid app name
 var (
 	// Valid App Name to deploy.
 	ValidAppNameRegex = fmt.Sprintf(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`)
 )
 
-// Validate a regex.
-func RegexValidate(name string, regex string) bool {
-	Regex := regexp.MustCompile(regex)
-	return Regex.MatchString(name)
-}
-
-// Error Messages.
+// Error Messages
 var (
 	ConnectionRefused      = "connection refused"
 	NetworkUnReachable     = "Network is unreachable"
@@ -112,7 +102,16 @@ var (
 	FailedToParseImage     = "Failed to parse image"
 )
 
-const (
-	CLIVersion          = "appctl version: v1.2"
-	UTCClusterTimeStamp = "2006-01-02T15:04:05Z"
-)
+func RegexValidate(name string, regex string) bool {
+	Regex := regexp.MustCompile(regex)
+	return Regex.MatchString(name)
+}
+
+// Validate a regex
+func getAllScope() string {
+	var scope string
+	for _, val := range requiredScopes {
+		scope += val + " "
+	}
+	return (scope)
+}

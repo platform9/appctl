@@ -4,54 +4,55 @@
 * Read the docs: [getting started with appctl](https://platform9.com/docs/appctl/getting-started)
 
 
-### Purpose
-* Appctl is a CLI that can be installed on Windows, MacOS and Linux, which connects to a Platform9 Managed Kubernetes Cluster running in AWS and enables users to deploy containerized applications in seconds.
+# Purpose
+* `appctl` is a CLI that can be installed on Windows, MacOS and Linux, which connects to a Platform9 Managed Kubernetes Cluster running in AWS and enables users to deploy containerized applications in seconds.
 
-### A better way to run apps on K8s
-*  **Appctl** exposes the high value app orchestration capabilities available from Kubernetes and k-native, while hiding infrastructure complexity. 
+## A better way to run apps on K8s
+*  `appctl` exposes the high value app orchestration capabilities available from Kubernetes and k-native, while hiding infrastructure complexity. 
 
-* As a result, it is much faster to run apps while also running them more cost effectively in the cloud
+* As a result, it is much faster to run apps while also running them more cost effectively in the cloud.
 
-### How appctl works
+# How `appctl` works
 ![flow-diagram](images/graphic_how-appctl-works.png)
 
-### Pre-requisites
+# Pre-requisites
 The CLI currently supports
 * Linux (64 bit)
 * Windows (64 bit)
 * MacOS (64 bit)
 
 
-### Installation and Usage
+# Installation
 - Downloading the CLI can be done from [appctl website](https://platform9.com/appctl/) and from the command line. 
 
 To install from the command line of host machine, run the following commands to download the appctl CLI and give executable permission to use it.
 
-**For Linux**
+## Linux
 ```sh
 curl -O https://pmkft-assets.s3.us-west-1.amazonaws.com/appctl/linux/appctl
 
 chmod +x appctl
 ```
 
-**For Mac**
+## Mac
 ```sh
 curl -O https://pmkft-assets.s3.us-west-1.amazonaws.com/appctl/macos/appctl
 
 chmod +x appctl
 ```
 
-**For Windows**
+## Windows
 ```sh
 curl -O https://pmkft-assets.s3.us-west-1.amazonaws.com/appctl/windows/appctl
 ```
-After successfull download give the executable permission to appctl.
+After successfull download give the executable permission to `appctl`.
 
 Once the CLI is successfully downloaded, run the Login command to authenticate to Platform9 and deploy applications.
 
+# Usage
 
-### Appctl Commands
-Below are supported commands for Appctl.
+## Appctl Commands
+Below are supported commands for `appctl`.
 
 ```sh
 % ./appctl --help
@@ -77,7 +78,7 @@ Flags:
 Use "appctl [command] --help" for more information about a command.
 ```
 
-### Login 
+## Login 
 To appctl, first login by running ```./appctl login```
 
 ```sh
@@ -129,7 +130,7 @@ Next, login using **Google or Github account**
 
 Now on successful log in, appctl can be used to deploy applications.
 
-### Version
+## Version
 
   This command is used to get the current version of the CLI
 ```sh
@@ -139,7 +140,7 @@ appctl version: v1.1
 
 ```
 
-### Deploy
+## Deploy
 
 To deploy an app, run ```./appctl deploy```
 
@@ -218,7 +219,7 @@ Appctl supports multiple ```--env``` variables
 ./appctl deploy --app-name <name> --image <docker-image path> --env key1=value1 --env key2=value2
 ```
 
-### List
+## List
 
 To list all the running apps.
 
@@ -246,7 +247,7 @@ NAME           URL                                                IMAGE         
 cj-example  http://cj-example.cjones4s95lk.18.224.208.55.sslip.io  mcr.microsoft.com/dotnet/samples:aspnetapp  True  2021-12-21T21:52:58Z  nil
 ```
 
-### Describe
+## Describe
 
 Describe can be used to display the applications current state.
 
@@ -273,7 +274,7 @@ Flags:
 % ./appctl describe -n cj-example
 ```
 
-### Delete
+## Delete
 
 ```sh
 % ./appctl delete --help
@@ -303,3 +304,47 @@ Flags:
 Are you sure you want to delete app (y/n)? y
 Successfully deleted the app: cj-example
 ```
+
+# Building `appctl` locally
+
+## Prerequisites
+- [`git`](https://git-scm.com/downloads)
+- [`make`](https://www.gnu.org/software/make/)
+- [`golang 1.17 or later`](https://go.dev/dl/)
+
+## Building
+Clone the repository, navigate to the cloned repository and download the dependencies using `go mod download`. Before building, ensure following environment variables are set either by following the instructions in `.env.dev` or by setting them as environment variables.
+1. APPURL
+1. DOMAIN
+1. CLIENTID
+1. GRANT_TYPE
+1. APPCTL_SEGMENT_WRITE_KEY (optional)
+```sh
+# For setting up fast-path locally, visit: https://github.com/platform9/fast-path
+APPURL := <YOUR_FAST_PATH_URI>
+# prebuilt binary uses auth0 for authentication
+DOMAIN := <YOUR_AUTH0_APPLICATION_DOMAIN>
+# auth0 client id
+CLIENTID := <YOUR_AUTH0_CLIENT_ID>
+# prebuilt binary uses grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code
+GRANT_TYPE := <GRANT_TYPE>
+# optional, used for telemetry
+APPCTL_SEGMENT_WRITE_KEY := <YOUR_SEGMENT_WRITE_KEY>
+```
+`appctl` can be configured to work with a local or a hosted `fast-path` service installation. For more details on setting up `fast-path` locally, check the GitHub repository [here](https://github.com/platform9/fast-path).
+
+Run the appropriate `make` target:
+- Linux
+
+  ```sh
+  make build-linux64
+  ```
+- Windows
+  ```sh
+  make build-win64
+  ```
+- MacOS
+  ```sh
+  make build-mac
+  ```
+To generate all the binaries run the default target. The executables are placed in `bin` directory.

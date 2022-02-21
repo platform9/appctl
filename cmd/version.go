@@ -7,7 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version_example = `
+// usage example
+var versionExample = `
   # Check the current version of appctl CLI being used.
   appctl version
  `
@@ -17,7 +18,7 @@ var (
 	versionCmd = &cobra.Command{
 		Use:     "version",
 		Short:   "Current version of appctl CLI being used",
-		Example: version_example,
+		Example: versionExample,
 		Long:    `Current version of appctl CLI being used`,
 		Run: func(cmd *cobra.Command, args []string) {
 			//Prints the current version of appctl being used.

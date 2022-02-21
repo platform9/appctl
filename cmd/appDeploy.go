@@ -14,7 +14,8 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-var deploy_example = `
+// usage example
+var deployExample = `
   # Deploy an app using app-name and container image (public registry path)
   # Assumes the container has a server that will listen on port 8080
   appctl deploy -n <appname> -i gcr.io/knative-samples/helloworld-go
@@ -47,76 +48,78 @@ var (
 	appCmdDeploy = &cobra.Command{
 		Use:     "deploy",
 		Short:   "Deploy an app",
-		Example: deploy_example,
+		Example: deployExample,
 		Long:    `Deploy an app`,
 		Run:     appCmdDeployRun,
 	}
 )
 
 type App struct {
-	Name     string
-	Image    string
-	Env      []string
-	Port     string
-	Username string
-	Password string
+	name     string
+	image    string
+	env      []string
+	port     string
+	userName string
+	password string
 }
 
+// command variables
 // This deployApp is of type App to take app name and app image from user.
 var deployApp App
 
 func init() {
 	rootCmd.AddCommand(appCmdDeploy)
-	appCmdDeploy.Flags().StringVarP(&deployApp.Name, "app-name", "n", "", `Name of the app to be deployed 
+	appCmdDeploy.Flags().StringVarP(&deployApp.name, "app-name", "n", "", `Name of the app to be deployed 
 (lowercase alphanumeric characters, '-' or '.', must start with alphanumeric characters only)`)
-	appCmdDeploy.Flags().StringVarP(&deployApp.Image, "image", "i", "", "Container image of the app (public / private registry path)")
-	appCmdDeploy.Flags().StringVarP(&deployApp.Username, "username", "u", "", "Username of private container registry")
-	appCmdDeploy.Flags().StringVarP(&deployApp.Password, "password", "P", "", "Password of private container registry")
-	appCmdDeploy.Flags().StringArrayVarP(&deployApp.Env, "env", "e", nil, "Environment variable to set, as key=value pair")
-	appCmdDeploy.Flags().StringVarP(&deployApp.Port, "port", "p", "", "The port where app server listens, set as '--port <port>'")
+	appCmdDeploy.Flags().StringVarP(&deployApp.image, "image", "i", "", "Container image of the app (public / private registry path)")
+	appCmdDeploy.Flags().StringVarP(&deployApp.userName, "username", "u", "", "Username of private container registry")
+	appCmdDeploy.Flags().StringVarP(&deployApp.password, "password", "P", "", "Password of private container registry")
+	appCmdDeploy.Flags().StringArrayVarP(&deployApp.env, "env", "e", nil, "Environment variable to set, as key=value pair")
+	appCmdDeploy.Flags().StringVarP(&deployApp.port, "port", "p", "", "The port where app server listens, set as '--port <port>'")
 }
 
 func appCmdDeployRun(cmd *cobra.Command, args []string) {
 	reader := bufio.NewReader(os.Stdin)
 
-	if deployApp.Name == "" {
+	if deployApp.name == "" {
 		fmt.Printf("App Name: ")
 		appName, _ := reader.ReadString('\n')
-		deployApp.Name = strings.TrimSuffix(appName, "\n")
-		deployApp.Name = strings.TrimSuffix(deployApp.Name, "\r")
+		deployApp.name = strings.TrimSuffix(appName, "\n")
+		deployApp.name = strings.TrimSuffix(deployApp.name, "\r")
 	}
 
 	// Validate app name.
-	if !constants.RegexValidate(deployApp.Name, constants.ValidAppNameRegex) {
+	if !constants.RegexValidate(deployApp.name, constants.ValidAppNameRegex) {
 		fmt.Printf("Invalid app name.\n")
 		fmt.Printf("Name of the app to be deployed must contain a lowercase alphanumeric characters, '-' or '.'\nand must start with alphanumeric characters only.\n")
 		return
 	}
 
-	if deployApp.Image == "" {
+	if deployApp.image == "" {
 		fmt.Printf("Source Image: ")
 		appSourceImage, _ := reader.ReadString('\n')
-		deployApp.Image = strings.TrimSuffix(appSourceImage, "\n")
-		deployApp.Image = strings.TrimSuffix(deployApp.Image, "\r")
+		deployApp.image = strings.TrimSuffix(appSourceImage, "\n")
+		deployApp.image = strings.TrimSuffix(deployApp.image, "\r")
 	}
 
 	var isPrivateReg bool = true
-	if deployApp.Username == "" && deployApp.Password == "" {
+
+	if deployApp.userName == "" && deployApp.password == "" {
 		fmt.Printf("Is the image from a private registry (Y/n)? [n]: ")
 		readerChar := bufio.NewReader(os.Stdin)
 		char, _, _ := readerChar.ReadRune()
 		if char == 'y' || char == 'Y' {
 			fmt.Printf("Username: ")
 			appSourceUsername, _ := reader.ReadString('\n')
-			deployApp.Username = strings.TrimSuffix(appSourceUsername, "\n")
-			deployApp.Username = strings.TrimSuffix(deployApp.Username, "\r")
+			deployApp.userName = strings.TrimSuffix(appSourceUsername, "\n")
+			deployApp.userName = strings.TrimSuffix(deployApp.userName, "\r")
 
 			fmt.Printf("Password: ")
 			appPassword, _ := terminal.ReadPassword(0)
 			fmt.Printf("\n")
 			appSourcePassword := string(appPassword)
-			deployApp.Password = strings.TrimSuffix(appSourcePassword, "\n")
-			deployApp.Password = strings.TrimSuffix(deployApp.Password, "\r")
+			deployApp.password = strings.TrimSuffix(appSourcePassword, "\n")
+			deployApp.password = strings.TrimSuffix(deployApp.password, "\r")
 		} else {
 			isPrivateReg = false
 		}
@@ -124,7 +127,7 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 
 	//App to be deployed from private registry. Check if required options are provided
 	if isPrivateReg {
-		if deployApp.Username != "" && deployApp.Password != "" {
+		if deployApp.userName != "" && deployApp.password != "" {
 			//Continue in this case
 		} else {
 			//incorrect options specified. Either both or none of the Username and Password should be specified.
@@ -133,25 +136,25 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if deployApp.Port == "" {
+	if deployApp.port == "" {
 		fmt.Printf("Port [8080]: ")
 		port, _ := reader.ReadString('\n')
-		deployApp.Port = strings.TrimSuffix(port, "\n")
-		deployApp.Port = strings.TrimSuffix(deployApp.Port, "\r")
+		deployApp.port = strings.TrimSuffix(port, "\n")
+		deployApp.port = strings.TrimSuffix(deployApp.port, "\r")
 	}
 
-	if deployApp.Port != "" {
+	if deployApp.port != "" {
 		// Check if port given is valid i.e numeric only.
-		_, err := strconv.Atoi(deployApp.Port)
+		_, err := strconv.Atoi(deployApp.port)
 		if err != nil {
 			fmt.Printf("Invalid port. Please enter a valid port\n")
 			return
 		}
 	}
 
-	errapi := appManageAPI.CreateApp(deployApp.Name, deployApp.Image, deployApp.Username,
-		deployApp.Password, deployApp.Env, deployApp.Port)
+	errapi := appManageAPI.CreateApp(deployApp.name, deployApp.image, deployApp.userName,
+		deployApp.password, deployApp.env, deployApp.port)
 	if errapi != nil {
-		fmt.Printf("\nNot able to deploy app: %v.\nError: %v", deployApp.Name, errapi)
+		fmt.Printf("\nNot able to deploy app: %v.\nError: %v", deployApp.name, errapi)
 	}
 }
