@@ -9,7 +9,7 @@ import (
 	"gopkg.in/segmentio/analytics-go.v3"
 )
 
-var APPCTL_SEGMENT_WRITE_KEY = "uDPDiaRE8jHI6NJKsQsXYWFyNGyw5iZj"
+var APPCTL_SEGMENT_WRITE_KEY string
 
 func SegmentClient() (analytics.Client, error) {
 	logger := log.Default()
