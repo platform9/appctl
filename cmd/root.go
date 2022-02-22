@@ -32,12 +32,11 @@ func ensureAppSecrets(cmd *cobra.Command, args []string) {
 	missing := ""
 	for secret, val := range requiredSecrets {
 		if val == "" {
-			missing = fmt.Sprintf("%s%s\n", missing, secret)
+			missing = fmt.Sprintf("%s%s ", missing, secret)
 		}
 	}
 	if missing != "" {
-		fmt.Println(color.Red("appctl secrets not set.\n",
-			"Please ensure the following values are set:\n",
+		fmt.Printf("%s\n", color.Red("appctl secrets not set. Please ensure the following values are set:\n",
 			missing,
 		))
 		os.Exit(1)
