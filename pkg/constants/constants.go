@@ -39,7 +39,7 @@ const (
 // API Variables.
 var (
 	APPURL        string
-	TABLEFORMAT   = "NAME | URL | IMAGE | READY | CREATIONTIME | REASON"
+	TABLEFORMAT   = "NAME | URL | IMAGE | READY | AGE | REASON"
 	DOMAIN        string
 	CLIENTID      string
 	DEVICECODEURL string
