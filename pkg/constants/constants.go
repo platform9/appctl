@@ -38,14 +38,15 @@ const (
 
 // API Variables.
 var (
-	APPURL               = "***REMOVED***"
-	TABLEFORMAT          = "NAME | URL | IMAGE | READY | AGE | REASON"
-	DOMAIN               = "***REMOVED***"
-	DEVICECODEURL        = "https://" + DOMAIN + "/oauth/device/code"
-	CLIENTID             = "***REMOVED***"
-	DEVICEREQUESTPAYLOAD = "client_id=" + CLIENTID + "&scope=" + getAllScope()
+	APPURL        string
+	TABLEFORMAT   = "NAME | URL | IMAGE | READY | AGE | REASON"
+	DOMAIN        string
+	CLIENTID      string
+	DEVICECODEURL string
+
+	DEVICEREQUESTPAYLOAD string
 	// Grant type is urlencoded
-	GrantType = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code"
+	GrantType string
 )
 
 // Available SCOPES for auth0 access
@@ -114,4 +115,10 @@ func getAllScope() string {
 		scope += val + " "
 	}
 	return (scope)
+}
+
+// Composing dependent variables
+func init() {
+	DEVICECODEURL = fmt.Sprintf("https://%s/oauth/device/code", DOMAIN)
+	DEVICEREQUESTPAYLOAD = fmt.Sprintf("client_id=%s&scope=%s", CLIENTID, getAllScope())
 }
