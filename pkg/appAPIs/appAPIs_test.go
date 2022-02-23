@@ -3,6 +3,7 @@ package appAPIs
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -52,40 +53,92 @@ func TestListApps(t *testing.T) {
 		response, err := ListApps(dummyToken)
 		if err != nil {
 			if response != nil {
-				t.Fail()
+				t.Errorf("failed case %s\n", testName)
 			}
 			if err.Error() != test.responseBody["Message"] {
 				logAPIFailure(t, err)
 			}
+		} else {
+			if response["Message"].(string) != test.responseBody["Message"] {
+				t.Errorf("test case: %s\t\tserver response: %v\n", testName, response)
+			}
 		}
-		t.Logf("test case: %s\t\tserver response: %v\n", testName, response)
 		httpmock.DeactivateAndReset()
 	}
 }
 
 func TestCreateApp(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder(http.MethodPost, constants.APPURL, func(req *http.Request) (*http.Response, error) {
-		// TODO: mimic the logic
-		return &http.Response{}, nil
-	})
-	createAppCases := []struct {
-		name     string
-		image    string
-		username string
-		password string
-		env      []string
-		port     string
-		token    string
+	createAppCases := map[string]struct {
+		name              string
+		image             string
+		username          string
+		password          string
+		env               []string
+		port              string
+		token             string
+		responseCode      int
+		expectedErrPrefix string
 	}{
-		{name: dummyAppName, image: "private/someimage", username: "testUser", password: "testPassword", env: []string{"TEST_ENV=true", "PRODUCTION=false"}, port: "8888", token: dummyToken},
+		"TestPrivateImage": {
+			name:              "privatedummyapp",
+			image:             "private/someimage",
+			username:          "testUser",
+			password:          "testPassword",
+			env:               []string{"TEST_ENV=true", "PRODUCTION=false"},
+			port:              "8888",
+			token:             dummyToken,
+			responseCode:      http.StatusOK,
+			expectedErrPrefix: "",
+		},
+		"TestPublicImage": {
+			name:              "noAuth",
+			image:             "public/someimage",
+			username:          "",
+			password:          "",
+			env:               []string{"TEST_ENV=true", "PRODUCTION=false"},
+			port:              "8888",
+			token:             dummyToken,
+			responseCode:      http.StatusOK,
+			expectedErrPrefix: "",
+		},
+		"TestNoEnv": {
+			name:              "noEnv",
+			image:             "public/someimage",
+			username:          "",
+			password:          "",
+			env:               []string{},
+			port:              "8888",
+			token:             dummyToken,
+			expectedErrPrefix: "",
+		},
+		"TestFailBadRequest": {
+			name:              "noEnvFail",
+			image:             "public/someimage",
+			username:          "",
+			password:          "",
+			env:               []string{},
+			port:              "8888",
+			token:             dummyToken,
+			responseCode:      400,
+			expectedErrPrefix: constants.BadRequest,
+		},
 	}
 
-	for i, test := range createAppCases {
-		if err := CreateApp(test.name, test.image, test.username, test.password, test.env, test.port, test.token); err != nil {
-			t.Errorf("failed test case %d with error: %s\n", i+1, err.Error())
+	for testName, test := range createAppCases {
+		httpmock.Activate()
+		httpmock.RegisterResponder(http.MethodPost, constants.APPURL, func(req *http.Request) (*http.Response, error) {
+
+			return httpmock.NewJsonResponse(test.responseCode, map[string]string{
+				"Message": testName,
+			})
+		})
+		err := CreateApp(test.name, test.image, test.username, test.password, test.env, test.port, test.token)
+		if err != nil {
+			if !strings.HasPrefix(err.Error(), test.expectedErrPrefix) {
+				t.Errorf("failed test case %s with error: %s\n", testName, err.Error())
+			}
 		}
+		httpmock.DeactivateAndReset()
 	}
 }
 
