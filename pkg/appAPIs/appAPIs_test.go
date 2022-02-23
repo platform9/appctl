@@ -13,14 +13,54 @@ import (
 const dummyToken = "dummyToken"
 const dummyAppName = "hello"
 
+func logAPIFailure(t *testing.T, err error) {
+	t.Errorf("failed with error: %s\n", err.Error())
+}
+
 func TestListApps(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder(http.MethodGet, constants.APPURL, func(req *http.Request) (*http.Response, error) {
-		// TODO: mimic the logic
-		return &http.Response{}, nil
-	})
-	ListApps(dummyToken)
+	// These test cases are keyed according to whether they're expected to pass or result in an error
+	// The `ListApps` function returns err, nil in case of an error
+	listAppsCases := map[string]struct {
+		responseCode int
+		responseBody map[string]string
+	}{
+		"TestPass": {responseCode: 200,
+			responseBody: map[string]string{"Message": "Success"},
+		},
+		"TestBadRequest": {
+			responseCode: 400,
+			responseBody: map[string]string{"Message": constants.BadRequest},
+		},
+		"TestAccessForbidden": {
+			responseCode: 403,
+			responseBody: map[string]string{"Message": constants.AccessForbidden},
+		},
+		"TestMaxAppDeployLimit": {
+			responseCode: 429,
+			responseBody: map[string]string{"Message": constants.MaxAppDeployLimit},
+		},
+		"TestInternalServerError": {
+			responseCode: 500,
+			responseBody: map[string]string{"Message": constants.InternalServerError},
+		},
+	}
+	for testName, test := range listAppsCases {
+		httpmock.Activate()
+		httpmock.RegisterResponder(http.MethodGet, constants.APPURL, func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewJsonResponse(test.responseCode, test.responseBody)
+		})
+		response, err := ListApps(dummyToken)
+		if err != nil {
+			if response != nil {
+				t.Fail()
+			}
+			if err.Error() != test.responseBody["Message"] {
+				logAPIFailure(t, err)
+			}
+		}
+		t.Logf("test case: %s\t\tserver response: %v\n", testName, response)
+		httpmock.DeactivateAndReset()
+	}
 }
 
 func TestCreateApp(t *testing.T) {

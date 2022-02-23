@@ -101,6 +101,8 @@ var (
 	InvalidImage           = "Unable to fetch image"
 	MaxAppDeployLimitError = "Maximum apps deploy limit reached!!"
 	FailedToParseImage     = "Failed to parse image"
+	InternalServerError    = "Backend server error."
+	BadRequest             = "Bad request."
 )
 
 func RegexValidate(name string, regex string) bool {

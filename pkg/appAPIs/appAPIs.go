@@ -436,9 +436,9 @@ func checkStatusCode(statusCode int) error {
 		return fmt.Errorf(constants.MaxAppDeployLimit)
 	case 500:
 		//Internal server error.
-		return fmt.Errorf("Backend server error.")
+		return fmt.Errorf(constants.InternalServerError)
 	case 400:
-		return fmt.Errorf("Bad request.")
+		return fmt.Errorf(constants.BadRequest)
 	default:
 		return nil
 	}
