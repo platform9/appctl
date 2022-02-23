@@ -7,6 +7,7 @@ require (
 	github.com/briandowns/spinner v1.16.0
 	github.com/fatih/color v1.13.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/jarcoal/httpmock v1.1.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/ryanuber/columnize v2.1.2+incompatible
 	github.com/spf13/cobra v1.2.1
