@@ -30,7 +30,7 @@ jobs:
         fi
 
     - name: Build
-      run: go build -v .
+      run: make build-linux64
 
     - name: Test
-      run: go test -v ./...
+      run: make test
