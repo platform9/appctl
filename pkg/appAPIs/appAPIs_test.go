@@ -113,6 +113,7 @@ func TestCreateApp(t *testing.T) {
 			env:               []string{},
 			port:              "8888",
 			token:             dummyToken,
+			responseCode:      http.StatusOK,
 			expectedErrPrefix: "",
 		},
 		"TestFailBadRequest": {
