@@ -52,10 +52,7 @@ func TestListApps(t *testing.T) {
 		})
 		response, err := ListApps(dummyToken)
 		if err != nil {
-			if response != nil {
-				t.Errorf("failed case %s\n", testName)
-			}
-			if err.Error() != test.responseBody["Message"] {
+			if response != nil || err.Error() != test.responseBody["Message"] {
 				logAPIFailure(t, err)
 			}
 		} else {
@@ -143,26 +140,36 @@ func TestCreateApp(t *testing.T) {
 }
 
 func TestGetAppByName(t *testing.T) {
-
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%s/%s", constants.APPURL, dummyAppName), func(req *http.Request) (*http.Response, error) {
-		// TODO: mimic the logic
-		var body = map[string]interface{}{}
-		return httpmock.NewJsonResponse(200, body)
-	})
-	getAppByNameCases := []struct {
-		name  string
-		token string
+	getAppByNameCases := map[string]struct {
+		appName        string
+		token          string
+		expectedExists bool
 	}{
-		{name: dummyAppName, token: dummyToken},
+		"Exists":    {appName: "app1", token: dummyToken, expectedExists: true},
+		"NotExists": {appName: "app2", token: dummyToken, expectedExists: false},
 	}
-	for i, test := range getAppByNameCases {
-		appInfo, err := GetAppByName(test.name, test.token)
-		if err != nil {
-			t.Errorf("failed test case %d with error: %s\n", i+1, err.Error())
+	for testName, test := range getAppByNameCases {
+		httpmock.Activate()
+		if test.expectedExists {
+			httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%s/%s", constants.APPURL, test.appName), func(req *http.Request) (*http.Response, error) {
+				body := map[string]interface{}{
+					"Message": test.appName,
+				}
+				return httpmock.NewJsonResponse(200, body)
+			})
+		} else {
+			httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%s/%s", constants.APPURL, test.appName), func(req *http.Request) (*http.Response, error) {
+				body := map[string]interface{}{}
+				return httpmock.NewJsonResponse(400, body)
+			})
+		}
+		appInfo, err := GetAppByName(test.appName, test.token)
+		// if err != nil and the app is expected to exist, we fail the test
+		if err != nil && test.expectedExists {
+			t.Errorf("failed test case %s with error: %s\n", testName, err.Error())
 		}
 		t.Log(appInfo)
+		httpmock.DeactivateAndReset()
 	}
 }
 
@@ -173,4 +180,5 @@ func TestDeleteAppByName(t *testing.T) {
 		// TODO: mimic the logic
 		return httpmock.NewStringResponse(200, ""), nil
 	})
+
 }
