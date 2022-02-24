@@ -38,7 +38,7 @@ Follow these steps to build from source and deploy:
 3. To generate all the binaries run the default target. The executables are placed in `bin` directory.
 
 
-## Running the unit tests and manuall test ##
+## Running the unit tests and manual test ##
 1. To run unit tests:
 ```sh
 make test
