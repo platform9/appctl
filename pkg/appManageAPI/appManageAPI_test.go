@@ -9,7 +9,7 @@ import (
 )
 
 var dummyConfig = Config{
-	IDToken:   "",
+	IDToken:   "wizK8eib75MNuw==",
 	ExpiresAt: time.Now(),
 }
 
@@ -49,7 +49,7 @@ func SubTestLoadConfig(t *testing.T) {
 	}
 	if dummyConfig.ExpiresAt.UnixNano() != loadedConfig.ExpiresAt.UnixNano() ||
 		dummyConfig.IDToken != loadedConfig.IDToken {
-		errorMessage := fmt.Errorf(`configs donot match
+		errorMessage := fmt.Errorf(`configs do not match
 			loadedConfig:
 			%+v
 			dummyConfig:
@@ -79,4 +79,7 @@ func TestCreateLoadRemoveConfig(t *testing.T) {
 	if !t.Run("SubTestRemoveConfig", SubTestRemoveConfig) {
 		logSubTestFail(t, t.Name())
 	}
+	t.Cleanup(func() {
+		removeConfig(dummyConfigFilePath)
+	})
 }
