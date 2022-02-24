@@ -22,27 +22,34 @@ func TestListApps(t *testing.T) {
 	// These test cases are keyed according to whether they're expected to pass or result in an error
 	// The `ListApps` function returns err, nil in case of an error
 	listAppsCases := map[string]struct {
-		responseCode int
-		responseBody map[string]string
+		responseCode         int
+		responseBody         map[string]string
+		expectedResponseBody map[string]string
 	}{
-		"TestPass": {responseCode: 200,
-			responseBody: map[string]string{"Message": "Success"},
+		"TestPass": {
+			responseCode:         200,
+			responseBody:         map[string]string{"Message": "Success"},
+			expectedResponseBody: map[string]string{"Message": "Success"},
 		},
 		"TestBadRequest": {
-			responseCode: 400,
-			responseBody: map[string]string{"Message": constants.BadRequest},
+			responseCode:         400,
+			responseBody:         map[string]string{"Message": constants.BadRequest},
+			expectedResponseBody: map[string]string{"Message": constants.BadRequest},
 		},
 		"TestAccessForbidden": {
-			responseCode: 403,
-			responseBody: map[string]string{"Message": constants.AccessForbidden},
+			responseCode:         403,
+			responseBody:         map[string]string{"Message": constants.AccessForbidden},
+			expectedResponseBody: map[string]string{"Message": constants.AccessForbidden},
 		},
 		"TestMaxAppDeployLimit": {
-			responseCode: 429,
-			responseBody: map[string]string{"Message": constants.MaxAppDeployLimit},
+			responseCode:         429,
+			responseBody:         map[string]string{"Message": constants.MaxAppDeployLimit},
+			expectedResponseBody: map[string]string{"Message": constants.MaxAppDeployLimit},
 		},
 		"TestInternalServerError": {
-			responseCode: 500,
-			responseBody: map[string]string{"Message": constants.InternalServerError},
+			responseCode:         500,
+			responseBody:         map[string]string{"Message": constants.InternalServerError},
+			expectedResponseBody: map[string]string{"Message": constants.InternalServerError},
 		},
 	}
 	for testName, test := range listAppsCases {
@@ -56,7 +63,7 @@ func TestListApps(t *testing.T) {
 				logAPIFailure(t, err)
 			}
 		} else {
-			if response["Message"].(string) != test.responseBody["Message"] {
+			if response["Message"].(string) != test.expectedResponseBody["Message"] {
 				t.Errorf("test case: %s\t\tserver response: %v\n expected to be equal", testName, response)
 			}
 		}
