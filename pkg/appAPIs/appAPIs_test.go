@@ -57,7 +57,7 @@ func TestListApps(t *testing.T) {
 			}
 		} else {
 			if response["Message"].(string) != test.responseBody["Message"] {
-				t.Errorf("test case: %s\t\tserver response: %v\n", testName, response)
+				t.Errorf("test case: %s\t\tserver response: %v\n expected to be equal", testName, response)
 			}
 		}
 		httpmock.DeactivateAndReset()
@@ -132,7 +132,8 @@ func TestCreateApp(t *testing.T) {
 		err := CreateApp(test.name, test.image, test.username, test.password, test.env, test.port, test.token)
 		if err != nil {
 			if !strings.HasPrefix(err.Error(), test.expectedErrPrefix) {
-				t.Errorf("failed test case %s with error: %s\n", testName, err.Error())
+				errMessage := fmt.Errorf("failed test case %s with error: %s\n", testName, err.Error())
+				logAPIFailure(t, errMessage)
 			}
 		}
 		httpmock.DeactivateAndReset()
@@ -166,7 +167,8 @@ func TestGetAppByName(t *testing.T) {
 		appInfo, err := GetAppByName(test.appName, test.token)
 		// if err != nil and the app is expected to exist, we fail the test
 		if err != nil && test.expectedExists {
-			t.Errorf("failed test case %s with error: %s\n", testName, err.Error())
+			errMessage := fmt.Errorf("failed test case %s with error: %s\n", testName, err.Error())
+			logAPIFailure(t, errMessage)
 		}
 		t.Log(appInfo)
 		httpmock.DeactivateAndReset()
@@ -177,8 +179,36 @@ func TestDeleteAppByName(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	httpmock.RegisterResponder(http.MethodDelete, fmt.Sprintf("%s/%s", constants.APPURL, dummyAppName), func(req *http.Request) (*http.Response, error) {
-		// TODO: mimic the logic
 		return httpmock.NewStringResponse(200, ""), nil
 	})
+	if err := DeleteAppByName(dummyAppName, dummyToken); err != nil {
+		t.Log(err)
+	}
+	deleteAppByNameCases := map[string]struct {
+		appName        string
+		token          string
+		expectedExists bool
+	}{
+		"Exists":    {appName: "app1", token: dummyToken, expectedExists: true},
+		"NotExists": {appName: "app2", token: dummyToken, expectedExists: false},
+	}
 
+	for testName, test := range deleteAppByNameCases {
+		httpmock.Activate()
+		if test.expectedExists {
+			httpmock.RegisterResponder(http.MethodDelete, fmt.Sprintf("%s/%s", constants.APPURL, test.appName), func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(200, ""), nil
+			})
+		} else {
+			httpmock.RegisterResponder(http.MethodDelete, fmt.Sprintf("%s/%s", constants.APPURL, test.appName), func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(400, ""), nil
+			})
+		}
+		err := DeleteAppByName(test.appName, test.token)
+		if err != nil && test.expectedExists {
+			errMessage := fmt.Errorf("failed test case %s with error: %s\n", testName, err.Error())
+			logAPIFailure(t, errMessage)
+		}
+		httpmock.DeactivateAndReset()
+	}
 }
