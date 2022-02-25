@@ -406,7 +406,7 @@ func LoginApp() error {
 		send(event, nil)
 		return fmt.Errorf("Cannot login. Please try again.\n")
 	}
-	// Send info to fast-path api.
+	// Send info to app-controller api.
 	errLogin := appAPIs.Login(config.IDToken)
 	if errLogin != nil {
 		removeConfig(constants.CONFIGFILEPATH)

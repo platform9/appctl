@@ -18,7 +18,7 @@
 
 
 ## DEPENDS ON:
-<!--- Links to related PRs of appctl or fast-path if any -->
+<!--- Links to related PRs of appctl or app-controller if any -->
 <!--- delete section if not relevant -->
 
 ## TESTING DONE

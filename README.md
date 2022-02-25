@@ -320,8 +320,8 @@ Clone the repository, navigate to the cloned repository and download the depende
 1. GRANT_TYPE
 1. APPCTL_SEGMENT_WRITE_KEY (optional)
 ```sh
-# For setting up fast-path locally, visit: https://github.com/platform9/fast-path
-APPURL := <YOUR_FAST_PATH_URI>
+# For setting up app-controller locally, visit: https://github.com/platform9/app-controller
+APPURL := <YOUR_APP_CONTROLLER_URI>
 # prebuilt binary uses auth0 for authentication
 DOMAIN := <YOUR_AUTH0_APPLICATION_DOMAIN>
 # auth0 client id
@@ -331,7 +331,7 @@ GRANT_TYPE := <GRANT_TYPE>
 # optional, used for telemetry
 APPCTL_SEGMENT_WRITE_KEY := <YOUR_SEGMENT_WRITE_KEY>
 ```
-`appctl` can be configured to work with a local or a hosted `fast-path` service installation. For more details on setting up `fast-path` locally, check the GitHub repository [here](https://github.com/platform9/fast-path).
+`appctl` can be configured to work with a local or a hosted `app-controller` service installation. For more details on setting up `app-controller` locally, check the GitHub repository [here](https://github.com/platform9/app-controller).
 
 Run the appropriate `make` target:
 - Linux

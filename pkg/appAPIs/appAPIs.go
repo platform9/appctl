@@ -422,7 +422,7 @@ func genEnvSlice(env []string) []string {
 	return envSlice
 }
 
-// Check the status codes from fast-path.
+// Check the status codes from app-controller.
 func checkStatusCode(statusCode int) error {
 	switch statusCode {
 	case 200:
