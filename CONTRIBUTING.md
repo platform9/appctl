@@ -20,7 +20,7 @@ Contribute to `appctl` by following the guidelines below:
 
 Follow these steps to build from source and deploy:
 
-1. Hookup appctl with a [local or a hosted fast-path](https://github.com/platform9/fast-path#readme)
+1. Hookup appctl with a [local or a hosted app-controller](https://github.com/platform9/app-controller#readme)
 2. Run the appropriate `make` target
 - Linux
 
