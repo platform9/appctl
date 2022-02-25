@@ -40,7 +40,7 @@ func ListAppsInfo() error {
 	}
 
 	// Load config, and check if id_token expired
-	config, err := loadConfig()
+	config, err := loadConfig(constants.CONFIGFILEPATH)
 	if err != nil {
 		return fmt.Errorf("Failed to list apps. Please login using command `appctl login`.\n")
 	}
@@ -137,7 +137,7 @@ func CreateApp(
 	}
 
 	// Load config, and check if id_token expired
-	config, err := loadConfig()
+	config, err := loadConfig(constants.CONFIGFILEPATH)
 	if err != nil {
 		return fmt.Errorf("Failed to deploy app. Please login using command `appctl login`.\n")
 	}
@@ -277,7 +277,7 @@ func GetAppByNameInfo(
 	}
 
 	// Load config, and check if id_token expired
-	config, err := loadConfig()
+	config, err := loadConfig(constants.CONFIGFILEPATH)
 	if err != nil {
 		return fmt.Errorf("Failed to get app information. Please login using command `appctl login`.\n")
 	}
@@ -397,7 +397,7 @@ func LoginApp() error {
 		ExpiresAt: time.Now().Add(time.Duration(Token.ExpiresIn) * time.Second),
 	}
 
-	errConfig := createConfig(config)
+	errConfig := createConfig(config, constants.CONFIGFILEPATH)
 	if errConfig != nil {
 		//Event is Failure.
 		event.EventName = "Login"
@@ -409,7 +409,7 @@ func LoginApp() error {
 	// Send info to fast-path api.
 	errLogin := appAPIs.Login(config.IDToken)
 	if errLogin != nil {
-		removeConfig()
+		removeConfig(constants.CONFIGFILEPATH)
 		//Event is Failure.
 		event.EventName = "Login"
 		event.Status = "Failure"
@@ -439,7 +439,7 @@ func DeleteApp(
 	}
 
 	// Load config, and check if id_token expired
-	config, err := loadConfig()
+	config, err := loadConfig(constants.CONFIGFILEPATH)
 	if err != nil {
 		return fmt.Errorf("Failed to delete app. Please login using command `appctl login`.\n")
 	}
@@ -480,9 +480,9 @@ func DeleteApp(
 	return nil
 }
 
-func createConfig(config Config) error {
+func createConfig(config Config, configFilePath string) error {
 	//Create the pf9 config directory to store configfile
-	err := createDirectoryIfNotExist()
+	err := createDirectoryIfNotExist(constants.CONFIGDIR)
 	if err != nil {
 		return fmt.Errorf("Failed to create config directory!!")
 	}
@@ -492,25 +492,25 @@ func createConfig(config Config) error {
 		return err
 	}
 	// Write data in to file
-	if err := ioutil.WriteFile(constants.CONFIGFILEPATH, data, 0600); err != nil {
+	if err := ioutil.WriteFile(configFilePath, data, 0600); err != nil {
 		return err
 	}
 	return nil
 }
 
-func createDirectoryIfNotExist() error {
+func createDirectoryIfNotExist(configPath string) error {
 	// Create a pf9 directory
 	var err error
-	if _, err := os.Stat(constants.CONFIGDIR); os.IsNotExist(err) {
-		if errdir := os.MkdirAll(constants.CONFIGDIR, 0700); errdir != nil {
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		if errdir := os.MkdirAll(configPath, 0700); errdir != nil {
 			return errdir
 		}
 	}
 	return err
 }
 
-func loadConfig() (*Config, error) {
-	config, _ := ioutil.ReadFile(constants.CONFIGFILEPATH)
+func loadConfig(configFilePath string) (*Config, error) {
+	config, _ := ioutil.ReadFile(configFilePath)
 
 	readConfig := Config{}
 
@@ -521,8 +521,8 @@ func loadConfig() (*Config, error) {
 	return &readConfig, nil
 }
 
-func removeConfig() error {
-	err := os.Remove(constants.CONFIGFILEPATH)
+func removeConfig(configFilePath string) error {
+	err := os.Remove(configFilePath)
 	if err != nil {
 		return fmt.Errorf("Failed to remove config file")
 	}
@@ -566,7 +566,7 @@ func send(event Event, get_app map[string]interface{}) error {
 func fetchUserId() (string, string, error) {
 
 	// Load config, and fetch the IDToken
-	config, err := loadConfig()
+	config, err := loadConfig(constants.CONFIGFILEPATH)
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to load config. Please login using command `appctl login`.\n")
 	}
