@@ -32,7 +32,7 @@ const (
 	// HTTPS string
 	HTTPS = "https"
 
-	CLIVersion          = "appctl version: v1.2"
+	CLIVersion          = "appctl version: v1.3"
 	UTCClusterTimeStamp = "2006-01-02T15:04:05Z"
 )
 
