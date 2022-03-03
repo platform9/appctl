@@ -32,6 +32,10 @@ var deployExample = `
 
   	  # Sample command to deploy an app from a GCR private registry path
   	  appctl deploy -n <appname> -i gcr.io/<GCP_projectID>/<image> -u oauth2accesstoken -P <Token obtained from gcloud CLI>
+	
+	  # Sample command to deploy an app from an ACR private registry path
+	  # Service principal should have role Reader to pull the image
+  	  appctl deploy -n <appname> -i <registry name>.azurecr.io/<image>:<tag> -u <service principle appId> -P <service principle password>
 
 
   # Deploy an app using app-name and container image, and pass environment variables.
