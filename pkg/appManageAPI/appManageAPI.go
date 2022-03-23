@@ -125,6 +125,7 @@ func CreateApp(
 	username string, // User name in case of private container registry
 	password string, // Password in case of private container registry
 	env []string, // Environment varialbes of app.
+	envFilePath string, // File path to environment variables
 	port string, // Port where application listens on.
 ) error {
 	if name == "" || image == "" {
@@ -161,7 +162,7 @@ func CreateApp(
 	s.Start()
 	s.Suffix = " Deploying app.."
 
-	errCreate := appAPIs.CreateApp(name, image, username, password, env, port, config.IDToken)
+	errCreate := appAPIs.CreateApp(name, image, username, password, env, envFilePath, port, config.IDToken)
 	if errCreate != nil {
 		//Event is Failure.
 		event.EventName = "Deploy-App"

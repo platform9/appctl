@@ -78,6 +78,7 @@ func TestCreateApp(t *testing.T) {
 		username          string
 		password          string
 		env               []string
+		envFilePath       string
 		port              string
 		token             string
 		responseCode      int
@@ -137,7 +138,7 @@ func TestCreateApp(t *testing.T) {
 				"Message": testName,
 			})
 		})
-		err := CreateApp(test.name, test.image, test.username, test.password, test.env, test.port, test.token)
+		err := CreateApp(test.name, test.image, test.username, test.password, test.env, test.envFilePath, test.port, test.token)
 		if err != nil {
 			if !strings.HasPrefix(err.Error(), test.expectedErrPrefix) {
 				errMessage := fmt.Errorf("failed test case %s with error: %s\n", testName, err.Error())

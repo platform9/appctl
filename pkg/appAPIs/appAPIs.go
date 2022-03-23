@@ -1,10 +1,12 @@
 package appAPIs
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/platform9/appctl/pkg/constants"
@@ -129,15 +131,27 @@ func (cli_api *AppAPI) createAppAPI(createInfo string, token string) ([]byte, er
 
 // To get all the apps information.
 func CreateApp(name string, image string, username string, password string,
-	env []string, port string, token string) error {
+	env []string, envFilePath string, port string, token string) error {
 	// Endpoint to list apps.
 	url := fmt.Sprintf(constants.APPURL)
 	var createInfo string
+	if env != nil && envFilePath != "" {
+		return fmt.Errorf("You can only pass either envFilePath flag or env vars flag, but not both.")
+	}
 	if env != nil {
 		if port != "" {
 			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, username, password, port, genEnvSlice(env))
 		} else {
 			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "envs": %v}`, name, image, username, password, genEnvSlice(env))
+		}
+	} else if envFilePath != "" {
+		envSlice, err := GetSliceFromEnvFile(envFilePath)
+		if err != nil {
+			return fmt.Errorf("%s", err)
+		} else if port != "" {
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, username, password, port, envSlice)
+		} else {
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "envs": %v}`, name, image, username, password, envSlice)
 		}
 	} else {
 		if port != "" {
@@ -420,6 +434,29 @@ func genEnvSlice(env []string) []string {
 		envSlice[count] = envSlice[count] + ","
 	}
 	return envSlice
+}
+
+func GetSliceFromEnvFile(envFilePath string) ([]string, error) {
+	var envSlice []string
+	if envFilePath != "" {
+		envFile, err := os.Open(envFilePath)
+		if err != nil {
+			return nil, fmt.Errorf("Error opening the env file. Please make sure that file path: %s is valid.", envFilePath)
+		}
+		defer envFile.Close()
+		scanner := bufio.NewScanner(envFile)
+		for scanner.Scan() {
+			text := scanner.Text()
+			splitEnv := strings.Split(text, "=")
+			envSlice = append(envSlice, fmt.Sprintf(`{"key": "%v", "value": "%v"}`, splitEnv[0], splitEnv[1]))
+		}
+
+		for count := 0; count < len(envSlice)-1; count++ {
+			envSlice[count] = envSlice[count] + ","
+		}
+	}
+
+	return envSlice, nil
 }
 
 // Check the status codes from app-controller.

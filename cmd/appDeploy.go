@@ -59,12 +59,13 @@ var (
 )
 
 type App struct {
-	name     string
-	image    string
-	env      []string
-	port     string
-	userName string
-	password string
+	name        string
+	image       string
+	env         []string
+	port        string
+	userName    string
+	password    string
+	envFilePath string
 }
 
 // command variables
@@ -79,6 +80,7 @@ func init() {
 	appCmdDeploy.Flags().StringVarP(&deployApp.userName, "username", "u", "", "Username of private container registry")
 	appCmdDeploy.Flags().StringVarP(&deployApp.password, "password", "P", "", "Password of private container registry")
 	appCmdDeploy.Flags().StringArrayVarP(&deployApp.env, "env", "e", nil, "Environment variable to set, as key=value pair")
+	appCmdDeploy.Flags().StringVarP(&deployApp.envFilePath, "envPath", "f", "", "File path for Enviroment variables, as line separated key=value pair")
 	appCmdDeploy.Flags().StringVarP(&deployApp.port, "port", "p", "", "The port where app server listens, set as '--port <port>'")
 }
 
@@ -157,7 +159,7 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 	}
 
 	errapi := appManageAPI.CreateApp(deployApp.name, deployApp.image, deployApp.userName,
-		deployApp.password, deployApp.env, deployApp.port)
+		deployApp.password, deployApp.env, deployApp.envFilePath, deployApp.port)
 	if errapi != nil {
 		fmt.Printf("\nNot able to deploy app: %v.\nError: %v", deployApp.name, errapi)
 	}
