@@ -135,17 +135,40 @@ func CreateApp(name string, image string, username string, password string,
 	// Endpoint to list apps.
 	url := fmt.Sprintf(constants.APPURL)
 	var createInfo string
+	// if both are provided then we will take union of two
 	if env != nil && envFilePath != "" {
-		return fmt.Errorf("You can only pass either envFilePath flag or env vars flag, but not both.")
-	}
-	if env != nil {
+		sliceFromEnv, sliceMap := genEnvSlice(env)
+		sliceFromEnvFile, envMap, err := GetSliceFromEnvFile(envFilePath)
+
+		if err != nil {
+			return fmt.Errorf("%s", err)
+		}
+
+		// if a same key is found in both (envFile and env from command line, we will throw an error)
+		for key, _ := range envMap {
+			_, found := sliceMap[key]
+			if found {
+				return fmt.Errorf("Duplicate environment variable: %v found. Either remove it from env file or from command line.", key)
+			}
+		}
+
+		slice := append(sliceFromEnv, ",")
+		slice = append(slice, sliceFromEnvFile...)
+		fmt.Printf("%s", slice)
 		if port != "" {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, username, password, port, genEnvSlice(env))
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, username, password, port, slice)
 		} else {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "envs": %v}`, name, image, username, password, genEnvSlice(env))
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "envs": %v}`, name, image, username, password, slice)
+		}
+	} else if env != nil {
+		envSlice, _ := genEnvSlice(env)
+		if port != "" {
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, username, password, port, envSlice)
+		} else {
+			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "envs": %v}`, name, image, username, password, envSlice)
 		}
 	} else if envFilePath != "" {
-		envSlice, err := GetSliceFromEnvFile(envFilePath)
+		envSlice, _, err := GetSliceFromEnvFile(envFilePath)
 		if err != nil {
 			return fmt.Errorf("%s", err)
 		} else if port != "" {
@@ -421,33 +444,37 @@ func Login(token string) error {
 }
 
 // Generate environemnt slice as per create command. [{ "key":"ENV1", "value":"val1"}, { "key":"ENV2", "value":"val2"}]
-func genEnvSlice(env []string) []string {
+func genEnvSlice(env []string) ([]string, map[string]string) {
 	var envSlice []string
-
+	sliceMap := make(map[string]string)
 	if env != nil {
 		for _, value := range env {
 			splitEnv := strings.Split(value, "=")
+			sliceMap[splitEnv[0]] = splitEnv[1]
 			envSlice = append(envSlice, fmt.Sprintf(`{"key": "%v", "value": "%v"}`, splitEnv[0], splitEnv[1]))
 		}
 	}
 	for count := 0; count < len(envSlice)-1; count++ {
 		envSlice[count] = envSlice[count] + ","
 	}
-	return envSlice
+	return envSlice, sliceMap
 }
 
-func GetSliceFromEnvFile(envFilePath string) ([]string, error) {
+// Generate environemnt slice from env File. [{ "key":"ENV1", "value":"val1"}, { "key":"ENV2", "value":"val2"}]
+func GetSliceFromEnvFile(envFilePath string) ([]string, map[string]string, error) {
 	var envSlice []string
+	envMap := make(map[string]string)
 	if envFilePath != "" {
 		envFile, err := os.Open(envFilePath)
 		if err != nil {
-			return nil, fmt.Errorf("Error opening the env file. Please make sure that file path: %s is valid.", envFilePath)
+			return nil, nil, fmt.Errorf("Error opening the env file. Please make sure that file path: %s is valid.", envFilePath)
 		}
 		defer envFile.Close()
 		scanner := bufio.NewScanner(envFile)
 		for scanner.Scan() {
 			text := scanner.Text()
 			splitEnv := strings.Split(text, "=")
+			envMap[splitEnv[0]] = splitEnv[1]
 			envSlice = append(envSlice, fmt.Sprintf(`{"key": "%v", "value": "%v"}`, splitEnv[0], splitEnv[1]))
 		}
 
@@ -456,7 +483,7 @@ func GetSliceFromEnvFile(envFilePath string) ([]string, error) {
 		}
 	}
 
-	return envSlice, nil
+	return envSlice, envMap, nil
 }
 
 // Check the status codes from app-controller.
