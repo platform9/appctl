@@ -154,7 +154,7 @@ func CreateApp(name string, image string, username string, password string,
 
 		slice := append(sliceFromEnv, ",")
 		slice = append(slice, sliceFromEnvFile...)
-		fmt.Printf("%s", slice)
+
 		if port != "" {
 			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, username, password, port, slice)
 		} else {
