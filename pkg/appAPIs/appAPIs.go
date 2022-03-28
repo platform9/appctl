@@ -482,9 +482,9 @@ func GetSliceFromEnvFile(envFilePath string) ([]string, map[string]string, error
 		}
 		defer envFile.Close()
 		scanner := bufio.NewScanner(envFile)
+		regex, _ := regexp.Compile("[[:alnum:]]+=[[:alnum:]]+")
 		for scanner.Scan() {
 			text := scanner.Text()
-			regex, _ := regexp.Compile("[[:alnum:]]+=[[:alnum:]]+")
 			matched := regex.MatchString(text)
 			if !matched {
 				return nil, nil, fmt.Errorf("Environment variables in the .env file should be formatted as a line separated Key=Value pair.")
