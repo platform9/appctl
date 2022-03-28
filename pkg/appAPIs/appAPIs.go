@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/platform9/appctl/pkg/constants"
@@ -482,10 +481,9 @@ func GetSliceFromEnvFile(envFilePath string) ([]string, map[string]string, error
 		}
 		defer envFile.Close()
 		scanner := bufio.NewScanner(envFile)
-		regex, _ := regexp.Compile("[[:alnum:]]+=[[:alnum:]]+")
 		for scanner.Scan() {
 			text := scanner.Text()
-			matched := regex.MatchString(text)
+			matched := constants.RegexValidate(text, constants.RegexEnv)
 			if !matched {
 				return nil, nil, fmt.Errorf("Environment variables in the .env file should be formatted as a line separated Key=Value pair.")
 			}
