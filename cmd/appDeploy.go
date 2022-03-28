@@ -50,7 +50,7 @@ var deployExample = `
   appctl deploy -n <appname> -i <image> -f <env-file-path> -p <port>
   Ex: appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -f /Users/user/variables.env -p 7893
 
-  # Deploy an app using app-name, container image and pass environment variables through a file or pass through command line and set port where application listens on.
+  # Deploy an app using app-name, container image and pass environment variables through a file and pass through command line and set port where application listens on.
   appctl deploy -n <appname> -i <image> -f <env-file-path> -e key1=value1 -e key2=value2 -p <port>
   Ex: appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -f /Users/user/variables.env -e TARGET="appctler" -p 7893
   `
