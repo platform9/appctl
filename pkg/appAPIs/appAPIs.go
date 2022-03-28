@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/platform9/appctl/pkg/constants"
@@ -135,7 +136,17 @@ func CreateApp(name string, image string, username string, password string,
 	// Endpoint to list apps.
 	url := fmt.Sprintf(constants.APPURL)
 	var createInfo string
-	// if both are provided then we will take union of two
+
+	/*
+		Following are the cases for env passed through -envPath or -env flag or both
+		1. When environment variable is passed from both -env and -envPath:
+			1.1. If a common key is found in -env and -envPath, an error will occur.
+			1.2. If different env variables are passed in -env and -envPath, a union of both will be considered.
+		2. When environment variable is passed from -env (-e), a string slice will be generated from getEnvSlice function.
+		3. When environment variable is passed from -envPath (-f) (assuming that the file path is valid),
+		   a string slice  will be generated from GetSliceFromEnvFile function.
+	*/
+
 	if env != nil && envFilePath != "" {
 		sliceFromEnv, sliceMap := genEnvSlice(env)
 		sliceFromEnvFile, envMap, err := GetSliceFromEnvFile(envFilePath)
@@ -144,7 +155,7 @@ func CreateApp(name string, image string, username string, password string,
 			return fmt.Errorf("%s", err)
 		}
 
-		// if a same key is found in both (envFile and env from command line, we will throw an error)
+		// If the same key is found in both the .env file passed through --envPath and the --env flag, an error will occur.
 		for key, _ := range envMap {
 			_, found := sliceMap[key]
 			if found {
@@ -473,6 +484,11 @@ func GetSliceFromEnvFile(envFilePath string) ([]string, map[string]string, error
 		scanner := bufio.NewScanner(envFile)
 		for scanner.Scan() {
 			text := scanner.Text()
+			regex, _ := regexp.Compile("[[:alnum:]]+=[[:alnum:]]+")
+			matched := regex.MatchString(text)
+			if !matched {
+				return nil, nil, fmt.Errorf("Environment variables in the .env file should be formatted as a line separated Key=Value pair.")
+			}
 			splitEnv := strings.Split(text, "=")
 			envMap[splitEnv[0]] = splitEnv[1]
 			envSlice = append(envSlice, fmt.Sprintf(`{"key": "%v", "value": "%v"}`, splitEnv[0], splitEnv[1]))
