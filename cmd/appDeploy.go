@@ -45,6 +45,14 @@ var deployExample = `
   # Deploy an app using app-name, container image and pass environment variables and set port where application listens on.
   appctl deploy -n <appname> -i <image> -e key1=value1 -e key2=value2 -p <port>
   Ex: appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -e TARGET="appctler" -p 7893
+
+  # Deploy an app using app-name, container image and pass environment variables through a file and set port where application listens on.
+  appctl deploy -n <appname> -i <image> -f <env-file-path> -p <port>
+  Ex: appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -f /Users/user/variables.env -p 7893
+
+  # Deploy an app using app-name, container image and pass environment variables through a file and pass through command line and set port where application listens on.
+  appctl deploy -n <appname> -i <image> -f <env-file-path> -e key1=value1 -e key2=value2 -p <port>
+  Ex: appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -f /Users/user/variables.env -e TARGET="appctler" -p 7893
   `
 
 // appCmdDeploy - To deploy an app.
@@ -59,12 +67,13 @@ var (
 )
 
 type App struct {
-	name     string
-	image    string
-	env      []string
-	port     string
-	userName string
-	password string
+	name        string
+	image       string
+	env         []string
+	port        string
+	userName    string
+	password    string
+	envFilePath string
 }
 
 // command variables
@@ -79,6 +88,7 @@ func init() {
 	appCmdDeploy.Flags().StringVarP(&deployApp.userName, "username", "u", "", "Username of private container registry")
 	appCmdDeploy.Flags().StringVarP(&deployApp.password, "password", "P", "", "Password of private container registry")
 	appCmdDeploy.Flags().StringArrayVarP(&deployApp.env, "env", "e", nil, "Environment variable to set, as key=value pair")
+	appCmdDeploy.Flags().StringVarP(&deployApp.envFilePath, "envPath", "f", "", "Path to the environment variables file. Values in the .env file should be formatted as a line separated Key=Value pair")
 	appCmdDeploy.Flags().StringVarP(&deployApp.port, "port", "p", "", "The port where app server listens, set as '--port <port>'")
 }
 
@@ -157,7 +167,7 @@ func appCmdDeployRun(cmd *cobra.Command, args []string) {
 	}
 
 	errapi := appManageAPI.CreateApp(deployApp.name, deployApp.image, deployApp.userName,
-		deployApp.password, deployApp.env, deployApp.port)
+		deployApp.password, deployApp.env, deployApp.envFilePath, deployApp.port)
 	if errapi != nil {
 		fmt.Printf("\nNot able to deploy app: %v.\nError: %v", deployApp.name, errapi)
 	}

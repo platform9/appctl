@@ -1,10 +1,12 @@
 package appAPIs
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/platform9/appctl/pkg/constants"
@@ -129,24 +131,69 @@ func (cli_api *AppAPI) createAppAPI(createInfo string, token string) ([]byte, er
 
 // To get all the apps information.
 func CreateApp(name string, image string, username string, password string,
-	env []string, port string, token string) error {
+	env []string, envFilePath string, port string, token string) error {
 	// Endpoint to list apps.
 	url := fmt.Sprintf(constants.APPURL)
 	var createInfo string
-	if env != nil {
+	baseString := fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", `, name, image, username, password)
+
+	/*
+		Following are the cases for env passed through -envPath or -env flag or both
+		1. When environment variable is passed from both -env and -envPath:
+			1.1. If a common key is found in -env and -envPath, an error will occur.
+			1.2. If different env variables are passed in -env and -envPath, a union of both will be considered.
+		2. When environment variable is passed from -env (-e), a string slice will be generated from getEnvSlice function.
+		3. When environment variable is passed from -envPath (-f) (assuming that the file path is valid),
+		   a string slice  will be generated from GetSliceFromEnvFile function.
+	*/
+
+	if env != nil && envFilePath != "" {
+		sliceFromEnv, sliceMap := genEnvSlice(env)
+		sliceFromEnvFile, envMap, err := GetSliceFromEnvFile(envFilePath)
+
+		if err != nil {
+			return fmt.Errorf("%s", err)
+		}
+
+		// If the same key is found in both the .env file passed through --envPath and the --env flag, an error will occur.
+		for key := range envMap {
+			_, found := sliceMap[key]
+			if found {
+				return fmt.Errorf("Duplicate environment variable: %v found. Either remove it from env file or from command line.", key)
+			}
+		}
+
+		slice := append(sliceFromEnv, ",")
+		slice = append(slice, sliceFromEnvFile...)
+
 		if port != "" {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, username, password, port, genEnvSlice(env))
+			createInfo = baseString + fmt.Sprintf(`"port": "%s", "envs": %v}`, port, slice)
 		} else {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "envs": %v}`, name, image, username, password, genEnvSlice(env))
+			createInfo = baseString + fmt.Sprintf(`"envs": %v}`, slice)
+		}
+	} else if env != nil {
+		envSlice, _ := genEnvSlice(env)
+		if port != "" {
+			createInfo = baseString + fmt.Sprintf(`"port": "%s", "envs": %v}`, port, envSlice)
+		} else {
+			createInfo = baseString + fmt.Sprintf(`"envs": %v}`, envSlice)
+		}
+	} else if envFilePath != "" {
+		envSlice, _, err := GetSliceFromEnvFile(envFilePath)
+		if err != nil {
+			return fmt.Errorf("%s", err)
+		} else if port != "" {
+			createInfo = baseString + fmt.Sprintf(`"port": "%s", "envs": %v}`, port, envSlice)
+		} else {
+			createInfo = baseString + fmt.Sprintf(`"envs": %v}`, envSlice)
 		}
 	} else {
 		if port != "" {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s"}`, name, image, username, password, port)
+			createInfo = baseString + fmt.Sprintf(`"port": "%s"}`, port)
 		} else {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s"}`, name, image, username, password)
+			createInfo = baseString
 		}
 	}
-
 	client := &http.Client{}
 
 	cli_api := AppAPI{client, url}
@@ -407,19 +454,50 @@ func Login(token string) error {
 }
 
 // Generate environemnt slice as per create command. [{ "key":"ENV1", "value":"val1"}, { "key":"ENV2", "value":"val2"}]
-func genEnvSlice(env []string) []string {
+func genEnvSlice(env []string) ([]string, map[string]string) {
 	var envSlice []string
-
+	sliceMap := make(map[string]string)
 	if env != nil {
 		for _, value := range env {
 			splitEnv := strings.Split(value, "=")
+			sliceMap[splitEnv[0]] = splitEnv[1]
 			envSlice = append(envSlice, fmt.Sprintf(`{"key": "%v", "value": "%v"}`, splitEnv[0], splitEnv[1]))
 		}
 	}
 	for count := 0; count < len(envSlice)-1; count++ {
 		envSlice[count] = envSlice[count] + ","
 	}
-	return envSlice
+	return envSlice, sliceMap
+}
+
+// Generate environemnt slice from env File. [{ "key":"ENV1", "value":"val1"}, { "key":"ENV2", "value":"val2"}]
+func GetSliceFromEnvFile(envFilePath string) ([]string, map[string]string, error) {
+	var envSlice []string
+	envMap := make(map[string]string)
+	if envFilePath != "" {
+		envFile, err := os.Open(envFilePath)
+		if err != nil {
+			return nil, nil, fmt.Errorf("Error opening the env file. Please make sure that file path: %s is valid.", envFilePath)
+		}
+		defer envFile.Close()
+		scanner := bufio.NewScanner(envFile)
+		for scanner.Scan() {
+			text := scanner.Text()
+			matched := constants.RegexValidate(text, constants.RegexEnv)
+			if !matched {
+				return nil, nil, fmt.Errorf("Environment variables in the .env file should be formatted as a line separated Key=Value pair.")
+			}
+			splitEnv := strings.Split(text, "=")
+			envMap[splitEnv[0]] = splitEnv[1]
+			envSlice = append(envSlice, fmt.Sprintf(`{"key": "%v", "value": "%v"}`, splitEnv[0], splitEnv[1]))
+		}
+
+		for count := 0; count < len(envSlice)-1; count++ {
+			envSlice[count] = envSlice[count] + ","
+		}
+	}
+
+	return envSlice, envMap, nil
 }
 
 // Check the status codes from app-controller.

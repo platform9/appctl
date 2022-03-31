@@ -88,6 +88,9 @@ var (
 var (
 	// Valid App Name to deploy.
 	ValidAppNameRegex = fmt.Sprintf(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`)
+
+	// Regex for matching the environment variables in .env file
+	RegexEnv = fmt.Sprintf(`[[:alnum:]]+=[[:alnum:]]+`)
 )
 
 // Error Messages
