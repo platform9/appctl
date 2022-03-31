@@ -225,16 +225,32 @@ Example:
 Appctl supports multiple ```--env``` variables
 
 ```sh
-./appctl deploy --app-name <name> --image <docker-image path> --env key1=value1 --env key2=value2
+% ./appctl deploy --app-name <name> --image <docker-image path> --env key1=value1 --env key2=value2
 ```
 
 Appctl supports variables passed through a env file
 
 ```sh
-./appctl deploy --app-name <name> --image <docker-image path> -f <env-file path>
+% ./appctl deploy --app-name <name> --image <docker-image path> -f <env-file path>
 
 Example:
 ./appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -f /Users/user/variables.env
+
+A sample .env file would look like this: 
+key1=value1
+key2=value2
+```
+
+Appctl supports variables from both envFile and from command line
+
+```sh
+% ./appctl deploy --app-name <name> --image <docker-image path> -f <env-file path> --env key1=value1 --env key2=value2
+
+Example:
+./appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -f /Users/user/variables.env --env TARGET=appctler
+```
+
+
 ## List
 
 To list all the running apps.
