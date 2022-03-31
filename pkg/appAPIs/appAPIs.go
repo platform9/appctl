@@ -135,6 +135,7 @@ func CreateApp(name string, image string, username string, password string,
 	// Endpoint to list apps.
 	url := fmt.Sprintf(constants.APPURL)
 	var createInfo string
+	baseString := fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", `, name, image, username, password)
 
 	/*
 		Following are the cases for env passed through -envPath or -env flag or both
@@ -155,7 +156,7 @@ func CreateApp(name string, image string, username string, password string,
 		}
 
 		// If the same key is found in both the .env file passed through --envPath and the --env flag, an error will occur.
-		for key, _ := range envMap {
+		for key := range envMap {
 			_, found := sliceMap[key]
 			if found {
 				return fmt.Errorf("Duplicate environment variable: %v found. Either remove it from env file or from command line.", key)
@@ -166,34 +167,33 @@ func CreateApp(name string, image string, username string, password string,
 		slice = append(slice, sliceFromEnvFile...)
 
 		if port != "" {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, username, password, port, slice)
+			createInfo = baseString + fmt.Sprintf(`"port": "%s", "envs": %v}`, port, slice)
 		} else {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "envs": %v}`, name, image, username, password, slice)
+			createInfo = baseString + fmt.Sprintf(`"envs": %v}`, slice)
 		}
 	} else if env != nil {
 		envSlice, _ := genEnvSlice(env)
 		if port != "" {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, username, password, port, envSlice)
+			createInfo = baseString + fmt.Sprintf(`"port": "%s", "envs": %v}`, port, envSlice)
 		} else {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "envs": %v}`, name, image, username, password, envSlice)
+			createInfo = baseString + fmt.Sprintf(`"envs": %v}`, envSlice)
 		}
 	} else if envFilePath != "" {
 		envSlice, _, err := GetSliceFromEnvFile(envFilePath)
 		if err != nil {
 			return fmt.Errorf("%s", err)
 		} else if port != "" {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s", "envs": %v}`, name, image, username, password, port, envSlice)
+			createInfo = baseString + fmt.Sprintf(`"port": "%s", "envs": %v}`, port, envSlice)
 		} else {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "envs": %v}`, name, image, username, password, envSlice)
+			createInfo = baseString + fmt.Sprintf(`"envs": %v}`, envSlice)
 		}
 	} else {
 		if port != "" {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s", "port": "%s"}`, name, image, username, password, port)
+			createInfo = baseString + fmt.Sprintf(`"port": "%s"}`, port)
 		} else {
-			createInfo = fmt.Sprintf(`{"name":"%s", "image":"%s", "username":"%s", "password":"%s"}`, name, image, username, password)
+			createInfo = baseString
 		}
 	}
-
 	client := &http.Client{}
 
 	cli_api := AppAPI{client, url}

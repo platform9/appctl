@@ -170,7 +170,14 @@ Examples:
   # Deploy an app using app-name, container image and pass environment variables and set port where application listens on.
   appctl deploy -n <appname> -i <image> -e key1=value1 -e key2=value2 -p <port>
   Ex: appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -e TARGET="appctler" -p 7893
-  
+
+# Deploy an app using app-name, container image and pass environment variables through a file and set port where application listens on.
+  appctl deploy -n <appname> -i <image> -f <env-file-path> -p <port>
+  Ex: appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -f /Users/user/variables.env -p 7893
+
+  # Deploy an app using app-name, container image and pass environment variables through a file and pass through command line and set port where application listens on.
+  appctl deploy -n <appname> -i <image> -f <env-file-path> -e key1=value1 -e key2=value2 -p <port>
+  Ex: appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -f /Users/user/variables.env -e TARGET="appctler" -p 7893
 
 Flags:
   -n, --app-name string   Name of the app to be deployed 
@@ -181,6 +188,8 @@ Flags:
   -P, --password string   Password of private container registry
   -p, --port string       The port where app server listens, set as '--port <port>'
   -u, --username string   Username of private container registry
+  -f, --envPath string    Path to the environment variables file. 
+                          (Values in the .env file should be formatted as a line separated Key=Value pair)
 ```
 
 
@@ -219,6 +228,13 @@ Appctl supports multiple ```--env``` variables
 ./appctl deploy --app-name <name> --image <docker-image path> --env key1=value1 --env key2=value2
 ```
 
+Appctl supports variables passed through a env file
+
+```sh
+./appctl deploy --app-name <name> --image <docker-image path> -f <env-file path>
+
+Example:
+./appctl deploy -n hello -i gcr.io/knative-samples/helloworld-go -f /Users/user/variables.env
 ## List
 
 To list all the running apps.
